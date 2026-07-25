@@ -407,9 +407,12 @@ const Log = {
   error(mod, msg, data) { this._log(3, mod, msg, data); },
 
   _log(level, module, message, data) {
-    if (!this._enabled() && level < 2) return; // only warn/error outside dev mode
+    if (!this._enabled() && level < 2) return;
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false }) + '.' + String(now.getMilliseconds()).padStart(3, '0');
     const entry = {
-      time: new Date(),
+      time: now,
+      timeStr,
       level,
       levelName: LOG_NAMES[level],
       module,
@@ -418,11 +421,10 @@ const Log = {
     };
     this._entries.push(entry);
     if (this._entries.length > this._max) this._entries.shift();
-    // Also print to console for debugging
-    const prefix = `[${entry.levelName}][${module}]`;
+    // Console output for dev tools
+    const prefix = `[${timeStr}][${entry.levelName}][${module}]`;
     if (level >= 2) console.warn(prefix, message, data || '');
     else console.log(prefix, message, data || '');
-    // Notify log page if visible
     this._notify(entry);
   },
 
@@ -2669,7 +2671,6 @@ const devlogPage = {
   _unsubscribe: null,
 
   init() {
-    // Level filter buttons
     document.querySelectorAll('.devlog-lvl-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.devlog-lvl-btn').forEach(b => b.classList.remove('active'));
@@ -2681,15 +2682,10 @@ const devlogPage = {
 
     $('devlog-filter')?.addEventListener('input', () => devlogPage.render());
     $('devlog-clear')?.addEventListener('click', () => { Log.clear(); devlogPage.render(); });
+    $('devlog-copy')?.addEventListener('click', () => devlogPage.copyAll());
 
-    // Subscribe to new log entries
     this._unsubscribe = Log.onEntry(() => devlogPage.render());
-
-    // Initial render
     devlogPage.render();
-
-    // Auto-scroll on new entries when visible
-    Log._entries.forEach(() => {});
   },
 
   render() {
@@ -2698,27 +2694,41 @@ const devlogPage = {
     const filter = ($('devlog-filter')?.value || '').trim();
     const entries = Log.getEntries(devlogPage._minLevel < 0 ? 0 : devlogPage._minLevel, filter);
 
-    $('devlog-count').textContent = `${entries.length} 条 / ${Log._entries.length} 总`;
+    $('devlog-count').textContent = `${entries.length}/${Log._entries.length}`;
 
     if (!entries.length) {
-      list.innerHTML = '<div class="devlog-empty">' + (Log._entries.length ? '当前筛选无匹配' : '暂无日志') + '</div>';
+      list.innerHTML = '<div class="devlog-empty">' + (Log._entries.length ? '-- filter: no match --' : '-- no log entries yet --') + '</div>';
       return;
     }
 
-    // Batch render last 500
-    const batch = entries.slice(-500);
+    const batch = entries.slice(-800);
     list.innerHTML = batch.map(e => {
-      const time = e.time.toLocaleTimeString('zh-CN', { hour12: false });
-      const dataHtml = e.data ? `<span class="devlog-data" title="${escapeHtml(JSON.stringify(e.data))}">📎</span>` : '';
+      const time = e.time.toLocaleTimeString('zh-CN', { hour12: false }) + '.' + String(e.time.getMilliseconds()).padStart(3,'0');
+      const dataStr = e.data ? ' ' + JSON.stringify(e.data) : '';
       return `<div class="devlog-entry">
         <span class="devlog-time">${time}</span>
         <span class="devlog-lvl ${e.levelName}">${e.levelName}</span>
-        <span class="devlog-mod">${e.module}</span>
-        <span class="devlog-msg">${escapeHtml(e.message)}</span>
-        ${dataHtml}
+        <span class="devlog-mod">${escapeHtml(e.module)}</span>
+        <span class="devlog-msg">${escapeHtml(e.message + dataStr)}</span>
       </div>`;
     }).join('');
     list.scrollTop = list.scrollHeight;
+  },
+
+  copyAll() {
+    const filter = ($('devlog-filter')?.value || '').trim();
+    const entries = Log.getEntries(devlogPage._minLevel < 0 ? 0 : devlogPage._minLevel, filter);
+    if (!entries.length) { Toast.info('没有可复制的日志'); return; }
+    const text = entries.map(e => {
+      const time = e.time.toLocaleString('zh-CN', { hour12: false }) + '.' + String(e.time.getMilliseconds()).padStart(3,'0');
+      return `[${time}][${e.levelName}][${e.module}] ${e.message}${e.data ? ' ' + JSON.stringify(e.data) : ''}`;
+    }).join('\n');
+    navigator.clipboard.writeText(text).then(() => Toast.success(`已复制 ${entries.length} 条日志`)).catch(() => {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+      Toast.success(`已复制 ${entries.length} 条日志`);
+    });
   }
 };
 

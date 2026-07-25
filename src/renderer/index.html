@@ -652,24 +652,25 @@
 
       <!-- ───── Dev LOG ───── -->
       <section class="page" id="page-devlog">
-        <div class="page-header" style="margin-bottom:0;padding:8px 0">
-          <h1 style="font-size:16px">开发者日志</h1>
-          <p class="page-desc" style="font-size:11px">程序运行日志 · 分级输出 · 仅开发者模式记录</p>
+        <div class="page-header" style="margin-bottom:0;padding:6px 0">
+          <h1 style="font-size:15px;font-family:'JetBrains Mono',monospace">[dev] LOG</h1>
+          <p class="page-desc" style="font-size:11px">全量运行日志 · 可选中复制 · 分级过滤</p>
         </div>
         <div class="devlog-toolbar">
           <div class="devlog-levels" id="devlog-levels">
-            <button class="devlog-lvl-btn active" data-level="-1">全部</button>
+            <button class="devlog-lvl-btn active" data-level="-1">ALL</button>
             <button class="devlog-lvl-btn" data-level="0">DEBUG</button>
             <button class="devlog-lvl-btn" data-level="1">INFO</button>
             <button class="devlog-lvl-btn" data-level="2">WARN</button>
             <button class="devlog-lvl-btn" data-level="3">ERROR</button>
           </div>
-          <input type="text" class="devlog-filter" id="devlog-filter" placeholder="过滤模块/内容..." spellcheck="false">
-          <button class="devlog-clear" id="devlog-clear" title="清空日志">✕</button>
-          <span class="devlog-count" id="devlog-count">0 条</span>
+          <input type="text" class="devlog-filter" id="devlog-filter" placeholder="filter module/msg..." spellcheck="false">
+          <button class="devlog-copy" id="devlog-copy" title="复制全部">⧉</button>
+          <button class="devlog-clear" id="devlog-clear" title="清空">✕</button>
+          <span class="devlog-count" id="devlog-count">0</span>
         </div>
         <div class="devlog-list" id="devlog-list">
-          <div class="devlog-empty">暂无日志，开启开发者模式后操作触发记录</div>
+          <div class="devlog-empty">[log] 等待操作触发日志 — 在应用各页面操作时自动记录</div>
         </div>
       </section>
 
