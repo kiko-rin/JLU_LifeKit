@@ -606,7 +606,19 @@ const drcomPage = {
       if (!u || !p) return Toast.warn('请填写账号密码');
       Log.info('DrCOM', '校园网登录');
       $('drcom-login').disabled = true; $('drcom-login').textContent = '连接中...';
-      if (!isDemo()) { const r = await window.jlu.drcom.login({ server: $('drcom-server').value, username: u, password: p, mac: $('drcom-mac').value }); if (r.ok) { Log.info('DrCOM', '登录成功'); drcomPage.show(r.info); } else { Log.error('DrCOM', '登录失败', { error: r.error }); Toast.error(r.error); } }
+      if (!isDemo()) {
+        const config = { server: $('drcom-server').value, username: u, password: p, mac: $('drcom-mac').value };
+        const r = await window.jlu.drcom.login(config);
+        if (r.ok) {
+          Log.info('DrCOM', '登录成功');
+          // Save credentials for auto-login
+          window.jlu.cred.set('drcom', u, p, { server: config.server, mac: config.mac });
+          drcomPage.show(r.info);
+        } else {
+          Log.error('DrCOM', '登录失败', r.error);
+          Toast.error(r.error || '登录失败');
+        }
+      }
       else { Log.debug('DrCOM', '使用演示数据'); setTimeout(() => drcomPage.show({ username: u, ip: '10.10.10.123', loginTime: new Date().toLocaleString('zh-CN') }), 800); }
       $('drcom-login').disabled = false; $('drcom-login').textContent = '登录';
     });
@@ -641,7 +653,7 @@ const schedulePage = {
           const result = await window.jlu.schedule.importFromWeb({ semesterStart: '2026-09-01', courses: [] });
           if (result.ok) { Log.info('Schedule', '课表导入成功'); Toast.success('导入成功'); schedulePage.renderCourses(); }
           else { Log.error('Schedule', '课表导入失败', { error: result.error }); Toast.error(result.error || '导入失败'); }
-        } catch (e) { Log.error('Schedule', '课表导入异常', { error: e.message }); Toast.error('导入失败：' + e.message); }
+        } catch (e) { Log.error('Schedule', '课表导入异常', e); Toast.error('导入失败：' + e.message); }
       } else { Log.debug('Schedule', '使用演示数据导入'); Toast.success('导入成功（演示）'); }
     });
     $('schedule-add')?.addEventListener('click', async () => {
@@ -656,7 +668,7 @@ const schedulePage = {
           const result = await window.jlu.schedule.create(data);
           if (result.ok) { Log.info('Schedule', '课程添加成功'); Toast.success('已添加课程'); schedulePage.renderCourses(); }
           else { Log.error('Schedule', '课程添加失败', { error: result.error }); Toast.error(result.error || '添加失败'); }
-        } catch (e) { Log.error('Schedule', '课程添加异常', { error: e.message }); Toast.error('添加失败：' + e.message); }
+        } catch (e) { Log.error('Schedule', '课程添加异常', e); Toast.error('添加失败：' + e.message); }
       } else { Log.debug('Schedule', '使用演示数据添加课程'); Toast.success('已添加课程（演示）'); }
     });
   },
@@ -684,7 +696,7 @@ const schedulePage = {
         const result = await window.jlu.schedule.getAll();
         if (result.ok) { courses = result.courses; Log.info('Schedule', '课程列表获取成功', { count: courses.length }); }
         else { Log.error('Schedule', '获取课表失败', { error: result.error }); Toast.error('获取课表失败：' + (result.error || '')); return; }
-      } catch (e) { Log.error('Schedule', '获取课表异常', { error: e.message }); Toast.error('获取课表失败：' + e.message); return; }
+      } catch (e) { Log.error('Schedule', '获取课表异常', e); Toast.error('获取课表失败：' + e.message); return; }
     } else if (isDevMode) {
       courses = [
         { name: '高等数学', teacher: '张三', location: '逸夫楼301', dayOfWeek: 1, startSlot: 1, endSlot: 2, color: '#4FC3F7', weeks: Array.from({ length: 16 }, (_, i) => i + 1) },
@@ -764,14 +776,14 @@ const coursePage = {
           const result = await window.jlu.course.start({ username, password, courseIds: ids, interval: parseInt($('course-interval')?.value) || 2000, baseUrl: $('course-base-url')?.value || '' });
           if (result.ok) { Log.info('CourseGrab', '抢课已启动'); Toast.success('抢课已启动'); }
           else { Log.error('CourseGrab', '抢课启动失败', { error: result.error }); Toast.error(result.error || '启动失败'); $('course-start').disabled = false; $('course-stop').disabled = true; }
-        } catch (e) { Log.error('CourseGrab', '抢课启动异常', { error: e.message }); Toast.error('启动失败：' + e.message); $('course-start').disabled = false; $('course-stop').disabled = true; }
+        } catch (e) { Log.error('CourseGrab', '抢课启动异常', e); Toast.error('启动失败：' + e.message); $('course-start').disabled = false; $('course-stop').disabled = true; }
       } else { Log.debug('CourseGrab', '使用演示数据启动抢课'); Toast.success('抢课已启动（演示）'); }
     });
     $('course-stop')?.addEventListener('click', async () => {
       Log.info('CourseGrab', '停止抢课');
       if (!isDemo()) {
         try { await window.jlu.course.stop(); Log.info('CourseGrab', '抢课已停止'); Toast.info('抢课已停止'); }
-        catch (e) { Log.error('CourseGrab', '停止失败', { error: e.message }); Toast.error('停止失败：' + e.message); }
+        catch (e) { Log.error('CourseGrab', '停止失败', e); Toast.error('停止失败：' + e.message); }
       } else { Log.debug('CourseGrab', '演示停止抢课'); Toast.info('抢课已停止（演示）'); }
       $('course-start').disabled = false; $('course-stop').disabled = true; coursePage.log('已停止', 'warn');
     });
@@ -846,7 +858,7 @@ const examPage = {
         const result = await window.jlu.exam.get({});
         if (result.ok) { examPage.render(result.exams); Log.info('Exam', '考试安排获取成功', { count: result.exams?.length }); }
         else if (result.error) Log.warn('Exam', '获取考试安排失败', { error: result.error });
-      } catch (e) { Log.error('Exam', '获取考试安排异常', { error: e.message }); /* ignore on init */ }
+      } catch (e) { Log.error('Exam', '获取考试安排异常', e); /* ignore on init */ }
     }
     $('exam-load-demo')?.addEventListener('click', () => {
       if (!isDevMode) return Toast.info('请先开启开发者模式');
@@ -890,7 +902,7 @@ const gradPage = {
           const result = await window.jlu.grad.analyze(templates.templates[0].id, []);
           if (result.ok) { gradPage.render(result.data); Log.info('Graduation', '学分分析完成'); }
         }
-      } catch (e) { Log.error('Graduation', '培养方案获取异常', { error: e.message }); /* ignore on init */ }
+      } catch (e) { Log.error('Graduation', '培养方案获取异常', e); /* ignore on init */ }
     }
     $('grad-load-demo')?.addEventListener('click', () => {
       if (!isDevMode) return Toast.info('请先开启开发者模式');
@@ -941,7 +953,7 @@ const classroomPage = {
           const rooms = result.classrooms || result.rooms || [];
           if (result.ok) { Log.info('Classroom', '查询成功', { count: rooms.length }); Toast.success(`找到 ${rooms.length} 间空教室`); classroomPage.render(rooms); }
           else { Log.error('Classroom', '查询失败', { error: result.error }); Toast.error(result.error || '查询失败'); }
-        } catch (e) { Log.error('Classroom', '查询异常', { error: e.message }); Toast.error('查询失败：' + e.message); }
+        } catch (e) { Log.error('Classroom', '查询异常', e); Toast.error('查询失败：' + e.message); }
       } else {
         Log.debug('Classroom', '使用演示数据');
         const rooms = [];
@@ -981,7 +993,7 @@ const reviewPage = {
           if (courses.length) Toast.success(`找到 ${courses.length} 门课程`);
           Log.info('Review', '搜索结果', { count: courses.length });
           reviewPage.renderResults(courses);
-        } catch (e) { Log.error('Review', '搜索失败', { error: e.message }); Toast.error('搜索失败：' + e.message); }
+        } catch (e) { Log.error('Review', '搜索失败', e); Toast.error('搜索失败：' + e.message); }
       } else {
         Log.debug('Review', '使用演示数据');
         const results = reviewPage.demoCourses().filter(c =>
@@ -1121,7 +1133,7 @@ const reviewPage = {
       try {
         const result = await window.jlu.review.add(review);
         if (!result.ok) { Log.error('Review', '评价提交失败', { error: result.error }); return Toast.error(result.error || '提交失败'); }
-      } catch (e) { Log.error('Review', '评价提交异常', { error: e.message }); return Toast.error('提交失败：' + e.message); }
+      } catch (e) { Log.error('Review', '评价提交异常', e); return Toast.error('提交失败：' + e.message); }
     } else { Log.debug('Review', '使用演示数据提交'); }
     Log.info('Review', '评价已提交');
     Toast.success('评价已提交');
@@ -1187,7 +1199,7 @@ const cafePage = {
       try {
         const result = await window.jlu.cafeteria.getList();
         if (result.ok && result.cafeterias) { cafePage.cafes = result.cafeterias; Log.info('Cafe', '食堂列表获取成功', { count: cafePage.cafes.length }); }
-      } catch (e) { Log.error('Cafe', '获取食堂列表异常', { error: e.message }); /* ignore on init */ }
+      } catch (e) { Log.error('Cafe', '获取食堂列表异常', e); /* ignore on init */ }
     }
     const grid = $('cafeteria-list'); grid.innerHTML = '';
     const h = new Date().getHours();
@@ -1212,7 +1224,7 @@ const cafePage = {
         if (crowdResult.ok) crowdDisplay = crowdResult.crowd || crowd;
         if (menuResult.ok && menuResult.menu) c.menu = menuResult.menu;
         Log.info('Cafe', '食堂详情获取成功');
-      } catch (e) { Log.error('Cafe', '获取食堂详情异常', { error: e.message }); /* ignore */ }
+      } catch (e) { Log.error('Cafe', '获取食堂详情异常', e); /* ignore */ }
     }
     $('cafeteria-crowd').textContent = crowdDisplay;
     const body = $('cafeteria-menu'); body.innerHTML = '';
@@ -1240,7 +1252,7 @@ const busPage = {
       try {
         const result = await window.jlu.bus.getRoutes();
         if (result.ok && result.routes) { busPage.routes = result.routes; Log.info('Bus', '路线获取成功', { count: busPage.routes.length }); }
-      } catch (e) { Log.error('Bus', '获取路线异常', { error: e.message }); /* ignore on init */ }
+      } catch (e) { Log.error('Bus', '获取路线异常', e); /* ignore on init */ }
     }
     const routes = $('bus-routes'); routes.innerHTML = '';
     busPage.routes.forEach(r => {
@@ -1266,7 +1278,7 @@ const busPage = {
           nb.innerHTML = `<div class="bus-next-time">${nextResult.next.time}</div><div class="bus-next-countdown">${nextResult.next.countdown || ''}</div>`;
         }
         Log.info('Bus', '时刻表获取成功');
-      } catch (e) { Log.error('Bus', '获取时刻表异常', { error: e.message }); /* ignore */ }
+      } catch (e) { Log.error('Bus', '获取时刻表异常', e); /* ignore */ }
     }
     const now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
     let nextBus = null;
@@ -1344,7 +1356,7 @@ const deliveryPage = {
             });
             Toast.success('查询成功');
           } else { Log.error('Delivery', '物流查询失败', { error: result.error }); Toast.error(result.error || '查询失败'); }
-        } catch (e) { Log.error('Delivery', '物流查询异常', { error: e.message }); Toast.error('查询失败：' + e.message); }
+        } catch (e) { Log.error('Delivery', '物流查询异常', e); Toast.error('查询失败：' + e.message); }
       } else {
         Log.debug('Delivery', '使用演示数据');
         [{ time: '2026-07-25 09:30', desc: '已签收，菜鸟驿站代收' }, { time: '2026-07-25 06:15', desc: '派件中' }, { time: '2026-07-24 22:00', desc: '到达长春转运中心' }, { time: '2026-07-23 14:00', desc: '已揽收' }].forEach(t => {
@@ -1382,7 +1394,7 @@ const libseatPage = {
             Toast.error(result.error || '查询失败');
           }
         } catch (e) {
-          Log.error('LibSeat', '座位查询异常', { error: e.message });
+          Log.error('LibSeat', '座位查询异常', e);
           Toast.error('查询失败：' + e.message);
         }
       } else {
@@ -1408,7 +1420,7 @@ const libseatPage = {
           if (result.ok) { Log.info('LibSeat', '预约成功', { seat: s }); Toast.success(`座位 ${s} 预约成功`); }
           else { Log.error('LibSeat', '预约失败', { error: result.error }); Toast.error(result.error || '预约失败'); }
         } catch (e) {
-          Log.error('LibSeat', '预约异常', { error: e.message });
+          Log.error('LibSeat', '预约异常', e);
           Toast.error('预约失败：' + e.message);
         }
       } else {
@@ -1430,7 +1442,7 @@ const libseatPage = {
           if (result.ok) { Log.info('LibSeat', '自动预约已启动'); Toast.success('自动预约已启动'); }
           else { Log.error('LibSeat', '自动预约启动失败', { error: result.error }); Toast.error(result.error || '启动失败'); }
         } catch (e) {
-          Log.error('LibSeat', '自动预约异常', { error: e.message });
+          Log.error('LibSeat', '自动预约异常', e);
           Toast.error('启动失败：' + e.message);
         }
       } else {
@@ -1465,7 +1477,7 @@ const mapPage = {
         if (placesResult.ok && placesResult.places) mapPage.places = placesResult.places;
         if (campusResult.ok && campusResult.categories) mapPage.categories = campusResult.categories;
         Log.info('Map', '地图数据获取成功', { places: mapPage.places.length, categories: mapPage.categories.length });
-      } catch (e) { Log.error('Map', '获取地图数据异常', { error: e.message }); /* ignore on init */ }
+      } catch (e) { Log.error('Map', '获取地图数据异常', e); /* ignore on init */ }
     }
     const cats = $('map-categories'); cats.innerHTML = '';
     mapPage.categories.forEach(c => {
@@ -1477,7 +1489,7 @@ const mapPage = {
           try {
             const result = await window.jlu.map.getCategories(c.id);
             if (result.ok && result.places) { Log.info('Map', '分类地点获取成功', { count: result.places.length }); mapPage.render(null, result.places); return; }
-          } catch (e) { Log.error('Map', '获取分类地点异常', { error: e.message }); /* fall through */ }
+          } catch (e) { Log.error('Map', '获取分类地点异常', e); /* fall through */ }
         }
         mapPage.render(c.id === 'all' ? null : c.id);
       });
@@ -1492,7 +1504,7 @@ const mapPage = {
           const result = await window.jlu.map.search(kw);
           if (result.ok) { Log.info('Map', '地点搜索成功', { count: result.places?.length || 0 }); Toast.success(`找到 ${result.places?.length || 0} 个地点`); mapPage.render(null, result.places); }
           else { Log.error('Map', '地点搜索失败', { error: result.error }); Toast.error(result.error || '搜索失败'); }
-        } catch (e) { Log.error('Map', '地点搜索异常', { error: e.message }); Toast.error('搜索失败：' + e.message); }
+        } catch (e) { Log.error('Map', '地点搜索异常', e); Toast.error('搜索失败：' + e.message); }
       } else {
         Log.debug('Map', '使用演示数据搜索');
         const filtered = mapPage.places.filter(p => p.name.includes(kw) || p.desc.includes(kw));
@@ -1863,7 +1875,7 @@ const calPage = {
             Toast.success('课程表已导出为 .ics 文件');
             if (result.path) window.jlu?.shell?.showItemInFolder(result.path);
           } else { Log.error('Cal', '课程表导出失败', { error: result.error }); Toast.error(result.error || '导出失败'); }
-        } catch (e) { Log.error('Cal', '课程表导出异常', { error: e.message }); Toast.error('导出失败：' + e.message); }
+        } catch (e) { Log.error('Cal', '课程表导出异常', e); Toast.error('导出失败：' + e.message); }
       } else { Log.debug('Cal', '使用演示数据导出课程表'); Toast.success('课程表已导出为 .ics 文件（演示）'); }
     });
     $('cal-export-exams')?.addEventListener('click', async () => {
@@ -1877,7 +1889,7 @@ const calPage = {
             Toast.success('考试安排已导出为 .ics 文件');
             if (result.path) window.jlu?.shell?.showItemInFolder(result.path);
           } else { Log.error('Cal', '考试安排导出失败', { error: result.error }); Toast.error(result.error || '导出失败'); }
-        } catch (e) { Log.error('Cal', '考试安排导出异常', { error: e.message }); Toast.error('导出失败：' + e.message); }
+        } catch (e) { Log.error('Cal', '考试安排导出异常', e); Toast.error('导出失败：' + e.message); }
       } else { Log.debug('Cal', '使用演示数据导出考试安排'); Toast.success('考试安排已导出为 .ics 文件（演示）'); }
     });
   }
@@ -1910,12 +1922,25 @@ const settingsPage = {
       try { await window.jlu.settings.set('notifMonitor', on); } catch {}
       Toast.info(on ? '已开启自动通知监控' : '已关闭自动通知监控');
     });
-    // Load saved notif monitor state
     (async () => {
-      try {
-        const v = await window.jlu.settings.get('notifMonitor');
-        if ($('autostart-notifmonitor')) $('autostart-notifmonitor').checked = v === true;
-      } catch {}
+      try { const v = await window.jlu.settings.get('notifMonitor'); if ($('autostart-notifmonitor')) $('autostart-notifmonitor').checked = v === true; } catch {}
+    })();
+
+    // Auto-start DrCOM login
+    $('autostart-drcom')?.addEventListener('change', async (e) => {
+      const on = e.target.checked;
+      try { await window.jlu.settings.set('drcomAutoLogin', on); } catch {}
+      Toast.info(on ? '已开启自动登录校园网' : '已关闭自动登录校园网');
+      if (on && !isDemo()) {
+        // Check if DrCOM credentials are saved
+        try {
+          const hasCred = await window.jlu.cred.has('drcom');
+          if (!hasCred) Toast.warn('请先在 DrCOM 页面保存账号密码');
+        } catch {}
+      }
+    });
+    (async () => {
+      try { const v = await window.jlu.settings.get('drcomAutoLogin'); if ($('autostart-drcom')) $('autostart-drcom').checked = v === true; } catch {}
     })();
 
     // Developer Mode
@@ -2117,7 +2142,7 @@ const pctoolboxPage = {
           Toast.error('优化失败：' + (result.error || '未知错误'));
         }
       } catch (e) {
-        Log.error('PCToolbox', '内存优化异常', { error: e.message });
+        Log.error('PCToolbox', '内存优化异常', e);
         Toast.error('优化失败：' + e.message);
       }
       $('pctoolbox-optimize').disabled = false;
@@ -2697,20 +2722,19 @@ const devlogPage = {
     $('devlog-count').textContent = `${entries.length}/${Log._entries.length}`;
 
     if (!entries.length) {
-      list.innerHTML = '<div class="devlog-empty">' + (Log._entries.length ? '-- filter: no match --' : '-- no log entries yet --') + '</div>';
+      list.innerHTML = '<div class="terminal-line term-result" style="color:#484f58">' +
+        (Log._entries.length ? '-- filter: no match --' : '-- no log entries yet --') + '</div>';
       return;
     }
 
     const batch = entries.slice(-800);
     list.innerHTML = batch.map(e => {
-      const time = e.time.toLocaleTimeString('zh-CN', { hour12: false }) + '.' + String(e.time.getMilliseconds()).padStart(3,'0');
+      const time = e.timeStr || (e.time.toLocaleTimeString('zh-CN', { hour12: false }) + '.' + String(e.time.getMilliseconds()).padStart(3,'0'));
+      const mod = e.module;
+      const msg = (e.message || '') + (e.data && typeof e.data === 'object' && e.data.stack ? '' : '');
       const dataStr = e.data ? ' ' + JSON.stringify(e.data) : '';
-      return `<div class="devlog-entry">
-        <span class="devlog-time">${time}</span>
-        <span class="devlog-lvl ${e.levelName}">${e.levelName}</span>
-        <span class="devlog-mod">${escapeHtml(e.module)}</span>
-        <span class="devlog-msg">${escapeHtml(e.message + dataStr)}</span>
-      </div>`;
+      const cls = 'log-' + e.levelName.toLowerCase();
+      return `<div class="terminal-line ${cls}"><span style="color:#484f58">${time}</span> <span style="color:#8b949e">[</span><span class="log-lvl">${e.levelName}</span><span style="color:#8b949e">][</span><span style="color:#58a6ff">${escapeHtml(mod)}</span><span style="color:#8b949e">]</span> ${escapeHtml(msg)}</div>`;
     }).join('');
     list.scrollTop = list.scrollHeight;
   },

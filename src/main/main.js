@@ -715,6 +715,35 @@ if (!gotTheLock) {
       mainWindow?.hide();
     }
 
+    // Auto-start DrCOM login
+    const drcomAutoLogin = settingsStore.get('drcomAutoLogin');
+    if (drcomAutoLogin === true) {
+      (async () => {
+        try {
+          const cred = credManager.get('drcom');
+          if (cred && cred.username && cred.password) {
+            console.log('[AutoLogin] DrCOM 自动登录中...');
+            console.log('[AutoLogin] 用户名:', cred.username);
+            if (!drcomClient) drcomClient = new DrcomClient();
+            const result = await drcomClient.login({
+              server: cred.server || '10.10.10.10',
+              username: cred.username,
+              password: cred.password,
+              mac: cred.mac || '',
+            });
+            if (result && result.info) {
+              console.log('[AutoLogin] DrCOM 登录成功:', result.info.username);
+              sendToast('校园网自动登录', `已自动登录 ${result.info.username}`, 'jlu-drcom-auto');
+            }
+          } else {
+            console.warn('[AutoLogin] DrCOM 自动登录跳过：未保存凭据');
+          }
+        } catch (e) {
+          console.error('[AutoLogin] DrCOM 自动登录失败:', e.message);
+        }
+      })();
+    }
+
     // Auto-start notification crawler if it was enabled (legacy) or notifMonitor setting is on
     const notifMonitorSetting = settingsStore.get('notifMonitor');
     if (notificationCrawler.config.enabled || notifMonitorSetting === true) {

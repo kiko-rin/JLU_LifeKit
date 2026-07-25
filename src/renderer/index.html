@@ -652,25 +652,27 @@
 
       <!-- ───── Dev LOG ───── -->
       <section class="page" id="page-devlog">
-        <div class="page-header" style="margin-bottom:0;padding:6px 0">
-          <h1 style="font-size:15px;font-family:'JetBrains Mono',monospace">[dev] LOG</h1>
-          <p class="page-desc" style="font-size:11px">全量运行日志 · 可选中复制 · 分级过滤</p>
+        <div class="page-header" style="margin-bottom:0;padding:8px 0">
+          <h1 style="font-size:16px;font-family:'JetBrains Mono',monospace">[dev] $ tail -f /var/log/app</h1>
+          <p class="page-desc" style="font-size:11px">全量运行日志 · 选中复制 · 分级过滤</p>
         </div>
-        <div class="devlog-toolbar">
-          <div class="devlog-levels" id="devlog-levels">
+        <div class="devlog-toolbar" style="display:flex;gap:6px;padding:6px 0;flex-wrap:wrap;font-size:11px;flex-shrink:0">
+          <div style="display:flex;gap:2px">
             <button class="devlog-lvl-btn active" data-level="-1">ALL</button>
             <button class="devlog-lvl-btn" data-level="0">DEBUG</button>
             <button class="devlog-lvl-btn" data-level="1">INFO</button>
             <button class="devlog-lvl-btn" data-level="2">WARN</button>
             <button class="devlog-lvl-btn" data-level="3">ERROR</button>
           </div>
-          <input type="text" class="devlog-filter" id="devlog-filter" placeholder="filter module/msg..." spellcheck="false">
-          <button class="devlog-copy" id="devlog-copy" title="复制全部">⧉</button>
-          <button class="devlog-clear" id="devlog-clear" title="清空">✕</button>
-          <span class="devlog-count" id="devlog-count">0</span>
+          <input type="text" class="devlog-lvl-btn" id="devlog-filter" placeholder="filter..." spellcheck="false" style="flex:1;max-width:120px;padding:2px 6px;text-align:left;outline:none;font-family:inherit;font-size:11px">
+          <button class="devlog-lvl-btn" id="devlog-copy" title="复制全部" style="cursor:pointer;font-size:11px">⧉</button>
+          <button class="devlog-lvl-btn" id="devlog-clear" title="清空" style="cursor:pointer;font-size:11px">✕</button>
+          <span class="term-prompt" style="font-size:11px;color:#484f58" id="devlog-count">0</span>
         </div>
-        <div class="devlog-list" id="devlog-list">
-          <div class="devlog-empty">[log] 等待操作触发日志 — 在应用各页面操作时自动记录</div>
+        <div class="terminal" style="min-height:0;flex:1;overflow:hidden">
+          <div class="terminal-output" id="devlog-list" style="margin-bottom:0;user-select:text;-webkit-user-select:text;cursor:text">
+            <div class="terminal-line term-result" style="color:#484f58">[log] 等待操作触发日志 — 在应用各页面操作时自动记录</div>
+          </div>
         </div>
       </section>
 
@@ -683,6 +685,7 @@
             <div class="setting-row"><div class="setting-info"><span class="setting-title">开机自动启动</span><span class="setting-desc">登录 Windows 后自动运行</span></div><label class="toggle-switch"><input type="checkbox" id="autostart-toggle"><span class="toggle-slider"></span></label></div>
             <div class="setting-row"><div class="setting-info"><span class="setting-title">启动后最小化到托盘</span><span class="setting-desc">静默后台运行，接收通知推送</span></div><label class="toggle-switch"><input type="checkbox" id="autostart-hidden"><span class="toggle-slider"></span></label></div>
             <div class="setting-row"><div class="setting-info"><span class="setting-title">启动后自动监控通知</span><span class="setting-desc">应用启动后自动开始抓取 OA 通知</span></div><label class="toggle-switch"><input type="checkbox" id="autostart-notifmonitor"><span class="toggle-slider"></span></label></div>
+            <div class="setting-row"><div class="setting-info"><span class="setting-title">启动时自动登录校园网</span><span class="setting-desc">自动执行 DrCOM 认证（需先保存凭据）</span></div><label class="toggle-switch"><input type="checkbox" id="autostart-drcom"><span class="toggle-slider"></span></label></div>
           </div></div>
 
           <!-- Personalization -->

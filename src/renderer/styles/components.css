@@ -763,26 +763,7 @@
 
 .devcli-ref-card.expanded .devcli-ref-card-example { display: block; }
 
-/* ─── Dev LOG (terminal style) ──────────────────────────────────── */
-.devlog-page {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 100px);
-  font-family: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
-}
-
-.devlog-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 0;
-  flex-wrap: wrap;
-  font-size: 11px;
-  flex-shrink: 0;
-}
-
-.devlog-levels { display: flex; gap: 2px; }
-
+/* ─── Dev LOG (shares .terminal style with CLI) ──────────────────── */
 .devlog-lvl-btn {
   padding: 2px 8px;
   border: 1px solid #30363d;
@@ -790,7 +771,7 @@
   color: #8b949e;
   border-radius: 3px;
   cursor: pointer;
-  font-family: inherit;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
   font-size: 11px;
   transition: all 0.15s;
   user-select: none;
@@ -801,146 +782,16 @@
 .devlog-lvl-btn.active { background: #30363d; color: #e6edf3; border-color: #58a6ff; }
 [data-theme="light"] .devlog-lvl-btn.active { background: #e8e8e8; color: #1f2328; border-color: #0969da; }
 
-.devlog-filter {
-  flex: 1;
-  max-width: 160px;
-  padding: 2px 6px;
-  border: 1px solid #30363d;
-  border-radius: 3px;
-  background: #0d1117;
-  color: #e6edf3;
-  font-family: inherit;
-  font-size: 11px;
-  outline: none;
-}
-
-[data-theme="light"] .devlog-filter { background: #fff; color: #1f2328; border-color: #d0d7de; }
-
-.devlog-clear, .devlog-copy {
-  width: 22px; height: 22px;
-  border: 1px solid #30363d;
-  background: #0d1117;
-  color: #8b949e;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 11px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: inherit;
-}
-
-[data-theme="light"] .devlog-clear, [data-theme="light"] .devlog-copy { background: #f6f8fa; border-color: #d0d7de; }
-.devlog-clear:hover { border-color: #f85149; color: #f85149; }
-.devlog-copy:hover { border-color: #3fb950; color: #3fb950; }
-
-.devlog-count {
-  font-size: 11px;
-  color: #484f58;
-  white-space: nowrap;
-  user-select: none;
-}
-
-[data-theme="light"] .devlog-count { color: #8c959f; }
-
-.devlog-list {
-  flex: 1;
-  background: #0d1117;
-  border: 1px solid #30363d;
-  border-radius: 6px;
-  font-size: 12px;
-  line-height: 1.5;
-  overflow-y: auto;
-  padding: 0;
-  user-select: text;
-  -webkit-user-select: text;
-  cursor: text;
-}
-
-[data-theme="light"] .devlog-list { background: #f6f8fa; border-color: #d0d7de; }
-
-.devlog-empty {
-  padding: 32px;
-  text-align: center;
-  color: #484f58;
-  font-size: 13px;
-  user-select: none;
-}
-
-[data-theme="light"] .devlog-empty { color: #8c959f; }
-
-.devlog-entry {
-  display: flex;
-  gap: 6px;
-  padding: 1px 10px;
-  min-height: 20px;
-  align-items: flex-start;
-  font-family: 'JetBrains Mono', 'Consolas', monospace;
-}
-
-.devlog-entry:nth-child(even) { background: rgba(255,255,255,0.02); }
-[data-theme="light"] .devlog-entry:nth-child(even) { background: rgba(0,0,0,0.02); }
-
-.devlog-entry:hover { background: rgba(88,166,255,0.08) !important; }
-
-.devlog-time {
-  color: #484f58;
-  font-size: 11px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  width: 75px;
-}
-
-[data-theme="light"] .devlog-time { color: #8c959f; }
-
-.devlog-lvl {
-  font-weight: 600;
-  font-size: 11px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  width: 46px;
-}
-
-.devlog-lvl.DEBUG { color: #8b949e; }
-.devlog-lvl.INFO { color: #58a6ff; }
-.devlog-lvl.WARN { color: #d29922; }
-.devlog-lvl.ERROR { color: #f85149; }
-
-[data-theme="light"] .devlog-lvl.DEBUG { color: #8c959f; }
-[data-theme="light"] .devlog-lvl.INFO { color: #0969da; }
-[data-theme="light"] .devlog-lvl.WARN { color: #9a6700; }
-[data-theme="light"] .devlog-lvl.ERROR { color: #cf222e; }
-
-.devlog-mod {
-  color: #58a6ff;
-  white-space: nowrap;
-  flex-shrink: 0;
-  width: 90px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 12px;
-}
-
-[data-theme="light"] .devlog-mod { color: #0969da; }
-
-.devlog-msg {
-  flex: 1;
-  color: #e6edf3;
-  word-break: break-all;
-  white-space: pre-wrap;
-  font-size: 12px;
-}
-
-[data-theme="light"] .devlog-msg { color: #1f2328; }
-
-.devlog-data {
-  font-size: 10px;
-  color: #484f58;
-  flex-shrink: 0;
-  cursor: pointer;
-  padding: 0 2px;
-  user-select: none;
-}
-
-.devlog-data:hover { color: #58a6ff; }
+/* Log entries reuse .terminal-line from CLI */
+.terminal-line .log-lvl { font-weight:600 }
+.terminal-line.log-debug { color: #8b949e; }
+.terminal-line.log-debug .log-lvl { color: #8b949e; }
+.terminal-line.log-info { color: #e6edf3; }
+.terminal-line.log-info .log-lvl { color: #58a6ff; }
+.terminal-line.log-warn { color: #d29922; }
+.terminal-line.log-warn .log-lvl { color: #d29922; }
+.terminal-line.log-error { color: #f85149; }
+.terminal-line.log-error .log-lvl { color: #f85149; }
 
 /* ─── Favorite Tile (Home Page) ──────────────────────────────── */
 .fav-tile {
