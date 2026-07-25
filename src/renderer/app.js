@@ -650,7 +650,12 @@ const schedulePage = {
       Log.info('Schedule', '导入课表');
       if (!isDemo()) {
         try {
-          const result = await window.jlu.schedule.importFromWeb({ semesterStart: '2026-09-01', courses: [] });
+          const input = prompt('请输入课程 JSON 数组（可从教务系统导出）：');
+          if (input === null) return;
+          let courses;
+          try { courses = JSON.parse(input); } catch { Toast.error('JSON 格式错误'); return; }
+          if (!Array.isArray(courses)) { Toast.error('请输入课程数组'); return; }
+          const result = await window.jlu.schedule.importFromWeb({ semesterStart: '2026-09-01', courses });
           if (result.ok) { Log.info('Schedule', '课表导入成功'); Toast.success('导入成功'); schedulePage.renderCourses(); }
           else { Log.error('Schedule', '课表导入失败', { error: result.error }); Toast.error(result.error || '导入失败'); }
         } catch (e) { Log.error('Schedule', '课表导入异常', e); Toast.error('导入失败：' + e.message); }
@@ -750,10 +755,28 @@ const studyPage = {
   showVideos(c) {
     $('study-videos-card').style.display = ''; $('study-course-name').textContent = c.name;
     const l = $('study-videos'); l.innerHTML = '';
+    if (!isDemo()) {
+      const username = $('study-username').value.trim(), password = $('study-password').value;
+      window.jlu.study.getVideos({ username, password, courseId: c.id }).then(result => {
+        if (result.ok && result.videos && result.videos.length) {
+          result.videos.forEach(v => {
+            const el = document.createElement('div'); el.className = 'video-item';
+            el.innerHTML = `<span class="video-icon">🎬</span><span class="video-title">${v.title || v.t}</span><span class="video-meta">${v.date || v.d || ''}</span><span class="video-download">⬇️</span>`;
+            l.appendChild(el);
+          });
+          return;
+        }
+        studyPage._renderDemoVideos(l);
+      }).catch(() => studyPage._renderDemoVideos(l));
+      return;
+    }
+    studyPage._renderDemoVideos(l);
+  },
+  _renderDemoVideos(container) {
     [{ t: '第1讲 绪论', d: '2025-09-01' }, { t: '第2讲 基础概念', d: '2025-09-08' }, { t: '第3讲 进阶', d: '2025-09-15' }].forEach(v => {
       const el = document.createElement('div'); el.className = 'video-item';
       el.innerHTML = `<span class="video-icon">🎬</span><span class="video-title">${v.t}</span><span class="video-meta">${v.d}</span><span class="video-download">⬇️</span>`;
-      l.appendChild(el);
+      container.appendChild(el);
     });
   }
 };
@@ -1148,8 +1171,33 @@ const cardPage = {
   async init() {
     if (!isDemo()) {
       try {
+        const hasCred = await window.jlu.cred.has('campuscard');
+        if (!hasCred) {
+          let btn = document.getElementById('card-config-btn');
+          if (!btn) {
+            btn = document.createElement('button');
+            btn.id = 'card-config-btn';
+            btn.className = 'btn btn-primary';
+            btn.textContent = '配置校园卡账号';
+            btn.style.marginTop = '12px';
+            btn.addEventListener('click', async () => {
+              Modal.show('校园一卡通 - 配置账号').then(async (result) => {
+                if (!result) return;
+                await window.jlu.cred.set('campuscard', result.username, result.password);
+                Toast.success('校园卡账号已保存');
+                document.getElementById('card-config-btn')?.remove();
+                cardPage.init();
+              });
+            });
+            const el = document.getElementById('card-balance')?.parentElement;
+            if (el) el.after(btn);
+          }
+          btn.style.display = '';
+          return;
+        }
+        const cred = await window.jlu.cred.get('campuscard');
+        const config = { cardNumber: cred?.username || '' };
         Log.info('Card', '获取校园卡余额');
-        const config = {};
         const balance = await window.jlu.card.getBalance(config);
         if (balance.ok) { Log.info('Card', '余额获取成功', { balance: balance.balance }); $('card-balance').textContent = balance.balance; $('card-id').textContent = '卡号：' + (balance.cardNumber || ''); }
         Log.info('Card', '获取消费流水');
@@ -1571,7 +1619,7 @@ const notifPage = {
 
     $('notif-start')?.addEventListener('click', async () => { Log.info('Notif', '启动通知监控'); notifPage.saveConfig(); if (!isDemo()) await window.jlu.notification.start(); notifPage.setStatus(true); Log.info('Notif', '监控已启动'); Toast.success('监控已启动'); });
     $('notif-stop')?.addEventListener('click', async () => { Log.info('Notif', '停止通知监控'); if (!isDemo()) await window.jlu.notification.stop(); notifPage.setStatus(false); Log.info('Notif', '监控已停止'); Toast.info('已停止'); });
-    $('notif-check')?.addEventListener('click', async () => { Log.info('Notif', '立即检查通知'); Toast.info('检查中...'); notifPage.addDemo(); Log.info('Notif', '检查完成'); Toast.success('检查完成'); $('notif-last-check').textContent = `上次检查：${new Date().toLocaleTimeString('zh-CN')}`; });
+    $('notif-check')?.addEventListener('click', async () => { Log.info('Notif', '立即检查通知'); Toast.info('检查中...'); if (isDemo()) { notifPage.addDemo(); } else { try { await window.jlu.notification.checkNow(); } catch (e) { Log.error('Notif', '检查通知失败', e); } } Log.info('Notif', '检查完成'); Toast.success('检查完成'); $('notif-last-check').textContent = `上次检查：${new Date().toLocaleTimeString('zh-CN')}`; });
     $('notif-test')?.addEventListener('click', () => { Log.info('Notif', '发送测试通知'); if (!isDemo()) window.jlu.notification.test(); Toast.info('测试通知已发送'); });
     $('notif-use-vpn')?.addEventListener('change', e => { $('notif-vpn-fields').style.display = e.target.checked ? '' : 'none'; });
 
@@ -1869,7 +1917,9 @@ const calPage = {
       if (!isDemo()) {
         Toast.info('正在导出课程表...');
         try {
-          const result = await window.jlu.cal.exportCourses({ courses: [], semesterStart: '2026-09-01', weeks: 20 });
+          const scheduleResult = await window.jlu.schedule.getAll();
+          const courses = scheduleResult.ok && scheduleResult.courses ? scheduleResult.courses : [];
+          const result = await window.jlu.cal.exportCourses({ courses, semesterStart: '2026-09-01', weeks: 20 });
           if (result.ok) {
             Log.info('Cal', '课程表导出成功', { path: result.path });
             Toast.success('课程表已导出为 .ics 文件');
@@ -1883,7 +1933,9 @@ const calPage = {
       if (!isDemo()) {
         Toast.info('正在导出考试安排...');
         try {
-          const result = await window.jlu.cal.exportExams([]);
+          const examResult = await window.jlu.exam.get({});
+          const exams = examResult.ok && examResult.exams ? examResult.exams : [];
+          const result = await window.jlu.cal.exportExams(exams);
           if (result.ok) {
             Log.info('Cal', '考试安排导出成功', { path: result.path });
             Toast.success('考试安排已导出为 .ics 文件');
