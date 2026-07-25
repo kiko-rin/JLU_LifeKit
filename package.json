@@ -1,6 +1,6 @@
 {
   "name": "jlu-lifekit",
-  "version": "2.0.0",
+  "version": "2.0.1-beta1",
   "description": "吉大生活+ - 吉林大学校园生活工具箱",
   "main": "src/main/main.js",
   "scripts": {
