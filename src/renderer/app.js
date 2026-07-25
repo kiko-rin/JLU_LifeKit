@@ -43,9 +43,6 @@ const ThemeEngine = {
     if (!isDemo()) {
       this.config = await window.jlu.theme.getConfig();
       window.jlu.theme.onChanged?.((cfg) => { this.config = cfg; this.apply(); });
-    } else {
-      this.config = { mode: 'system', background: 'none', bgOpacity: 0.15, bgBlur: 20, bgDim: 0.4 };
-      Log.debug('ThemeEngine', '使用默认主题配置');
     }
     this.apply();
     this.initSettingsUI();
@@ -517,8 +514,7 @@ const vpnPage = {
       const mode = vpnPage.selectedMode;
       Log.info('VPN', '启动代理', { port, mode });
       let result;
-      if (!isDemo()) result = await window.jlu.vpn.start(port, mode);
-      else result = { ok: true, port, mode };
+      result = await window.jlu.vpn.start(port, mode);
       if (result.ok) {
         Log.info('VPN', '代理已启动', { result: result });
         const modeNames = { redirect: '302 跳转', system: '系统代理', host: 'Host 映射' };
@@ -543,8 +539,7 @@ const vpnPage = {
     $('vpn-host-add')?.addEventListener('click', async () => {
       const domain = $('vpn-host-input').value.trim();
       if (!domain) return Toast.warn('请输入域名');
-      if (!isDemo()) { const r = await window.jlu.vpn.addHost(domain); vpnPage.renderHosts(r.hosts); }
-      else vpnPage.renderHosts([...(vpnPage._hosts || []), { domain, enabled: true }]);
+      const r = await window.jlu.vpn.addHost(domain); vpnPage.renderHosts(r.hosts);
       $('vpn-host-input').value = '';
       Toast.success(`已添加 ${domain}`);
     });
@@ -554,8 +549,7 @@ const vpnPage = {
       const url = $('vpn-url')?.value.trim(); if (!url) return Toast.warn('请输入网址');
       Log.info('VPN', 'URL 转换', { url });
       let vpnUrl;
-      if (!isDemo()) { const r = await window.jlu.vpn.convert(url); vpnUrl = r.ok ? r.vpnUrl : null; Log.info('VPN', 'URL 转换结果', { ok: !!r?.ok }); }
-      else vpnUrl = `https://vpn.jlu.edu.cn/${url.replace(/^https?:\/\//, '')}`;
+      const r = await window.jlu.vpn.convert(url); vpnUrl = r.ok ? r.vpnUrl : null; Log.info('VPN', 'URL 转换结果', { ok: !!r?.ok });
       if (vpnUrl) { $('vpn-result-url').value = vpnUrl; $('vpn-result').style.display = ''; Toast.success('转换成功'); }
     });
     $('vpn-copy')?.addEventListener('click', () => { navigator.clipboard?.writeText($('vpn-result-url').value); Toast.success('已复制'); });
@@ -567,14 +561,7 @@ const vpnPage = {
 
   async loadHosts() {
     let hosts;
-    if (!isDemo()) hosts = await window.jlu.vpn.getHosts();
-    else hosts = [
-      { domain: 'scholar.google.com', enabled: true },
-      { domain: 'dl.acm.org', enabled: true },
-      { domain: 'ieeexplore.ieee.org', enabled: true },
-      { domain: 'springer.com', enabled: true },
-      { domain: 'github.com', enabled: true },
-    ];
+    hosts = await window.jlu.vpn.getHosts();
     vpnPage._hosts = hosts;
     vpnPage.renderHosts(hosts);
   },
@@ -587,8 +574,7 @@ const vpnPage = {
       const el = document.createElement('div'); el.className = 'host-item';
       el.innerHTML = `<span class="host-domain">${h.domain}</span><button class="btn btn-ghost host-remove" data-domain="${h.domain}">✕</button>`;
       el.querySelector('.host-remove').addEventListener('click', async () => {
-        if (!isDemo()) { const r = await window.jlu.vpn.removeHost(h.domain); vpnPage.renderHosts(r.hosts); }
-        else vpnPage.renderHosts(hosts.filter(x => x.domain !== h.domain));
+        const r = await window.jlu.vpn.removeHost(h.domain); vpnPage.renderHosts(r.hosts);
         Toast.info(`已移除 ${h.domain}`);
       });
       list.appendChild(el);
@@ -619,7 +605,6 @@ const drcomPage = {
           Toast.error(r.error || '登录失败');
         }
       }
-      else { Log.debug('DrCOM', '使用演示数据'); setTimeout(() => drcomPage.show({ username: u, ip: '10.10.10.123', loginTime: new Date().toLocaleString('zh-CN') }), 800); }
       $('drcom-login').disabled = false; $('drcom-login').textContent = '登录';
     });
     $('drcom-logout')?.addEventListener('click', async () => { Log.info('DrCOM', '注销'); if (!isDemo()) await window.jlu.drcom.logout(); drcomPage.hide(); Toast.info('已注销'); });
@@ -659,7 +644,7 @@ const schedulePage = {
           if (result.ok) { Log.info('Schedule', '课表导入成功'); Toast.success('导入成功'); schedulePage.renderCourses(); }
           else { Log.error('Schedule', '课表导入失败', { error: result.error }); Toast.error(result.error || '导入失败'); }
         } catch (e) { Log.error('Schedule', '课表导入异常', e); Toast.error('导入失败：' + e.message); }
-      } else { Log.debug('Schedule', '使用演示数据导入'); Toast.success('导入成功（演示）'); }
+      }
     });
     $('schedule-add')?.addEventListener('click', async () => {
       const name = prompt('课程名称：'); if (!name) return;
@@ -674,7 +659,7 @@ const schedulePage = {
           if (result.ok) { Log.info('Schedule', '课程添加成功'); Toast.success('已添加课程'); schedulePage.renderCourses(); }
           else { Log.error('Schedule', '课程添加失败', { error: result.error }); Toast.error(result.error || '添加失败'); }
         } catch (e) { Log.error('Schedule', '课程添加异常', e); Toast.error('添加失败：' + e.message); }
-      } else { Log.debug('Schedule', '使用演示数据添加课程'); Toast.success('已添加课程（演示）'); }
+      }
     });
   },
   updateWeek() {
@@ -702,17 +687,6 @@ const schedulePage = {
         if (result.ok) { courses = result.courses; Log.info('Schedule', '课程列表获取成功', { count: courses.length }); }
         else { Log.error('Schedule', '获取课表失败', { error: result.error }); Toast.error('获取课表失败：' + (result.error || '')); return; }
       } catch (e) { Log.error('Schedule', '获取课表异常', e); Toast.error('获取课表失败：' + e.message); return; }
-    } else if (isDevMode) {
-      courses = [
-        { name: '高等数学', teacher: '张三', location: '逸夫楼301', dayOfWeek: 1, startSlot: 1, endSlot: 2, color: '#4FC3F7', weeks: Array.from({ length: 16 }, (_, i) => i + 1) },
-        { name: '大学英语', teacher: '李四', location: '外语楼205', dayOfWeek: 1, startSlot: 5, endSlot: 6, color: '#81C784', weeks: Array.from({ length: 16 }, (_, i) => i + 1) },
-        { name: '程序设计', teacher: '王五', location: '计算机楼401', dayOfWeek: 2, startSlot: 3, endSlot: 4, color: '#FFB74D', weeks: Array.from({ length: 16 }, (_, i) => i + 1) },
-        { name: '数据结构', teacher: '赵六', location: '计算机楼302', dayOfWeek: 3, startSlot: 1, endSlot: 2, color: '#E57373', weeks: Array.from({ length: 16 }, (_, i) => i + 1) },
-        { name: '线性代数', teacher: '孙七', location: '数学楼101', dayOfWeek: 3, startSlot: 5, endSlot: 6, color: '#BA68C8', weeks: Array.from({ length: 16 }, (_, i) => i + 1) },
-        { name: '体育', teacher: '周八', location: '体育馆', dayOfWeek: 4, startSlot: 3, endSlot: 4, color: '#4DB6AC' },
-        { name: '思政', teacher: '吴九', location: '文科楼201', dayOfWeek: 5, startSlot: 1, endSlot: 2, color: '#FFD54F' },
-        { name: '物理实验', teacher: '郑十', location: '物理楼实验室', dayOfWeek: 5, startSlot: 7, endSlot: 8, color: '#7986CB', weeks: [1, 3, 5, 7, 9, 11, 13, 15] },
-      ];
     } else { return; }
     courses.forEach(c => {
       if (c.weeks && !c.weeks.includes(schedulePage.week)) return;
@@ -738,8 +712,7 @@ const studyPage = {
       Toast.info('获取课程...');
       Log.info('Study', '获取课程列表');
       let courses;
-      if (!isDemo()) { const r = await window.jlu.study.getCourses({ username: u, password: p }); courses = r.ok ? r.courses : []; Log.info('Study', '课程列表获取完成', { count: courses.length }); }
-      else { Log.debug('Study', '使用演示数据'); courses = [{ id: 1, name: '高等数学A', term: '2025-1', teacher: '张三' }, { id: 2, name: '大学物理', term: '2025-1', teacher: '李四' }, { id: 3, name: '程序设计', term: '2025-1', teacher: '王五' }]; }
+      const r = await window.jlu.study.getCourses({ username: u, password: p }); courses = r.ok ? r.courses : []; Log.info('Study', '课程列表获取完成', { count: courses.length });
       studyPage.renderCourses(courses); Toast.success(`获取到 ${courses.length} 门课程`);
     });
   },
@@ -755,28 +728,19 @@ const studyPage = {
   showVideos(c) {
     $('study-videos-card').style.display = ''; $('study-course-name').textContent = c.name;
     const l = $('study-videos'); l.innerHTML = '';
-    if (!isDemo()) {
-      const username = $('study-username').value.trim(), password = $('study-password').value;
-      window.jlu.study.getVideos({ username, password, courseId: c.id }).then(result => {
-        if (result.ok && result.videos && result.videos.length) {
-          result.videos.forEach(v => {
-            const el = document.createElement('div'); el.className = 'video-item';
-            el.innerHTML = `<span class="video-icon">🎬</span><span class="video-title">${v.title || v.t}</span><span class="video-meta">${v.date || v.d || ''}</span><span class="video-download">⬇️</span>`;
-            l.appendChild(el);
-          });
-          return;
-        }
-        studyPage._renderDemoVideos(l);
-      }).catch(() => studyPage._renderDemoVideos(l));
-      return;
-    }
-    studyPage._renderDemoVideos(l);
-  },
-  _renderDemoVideos(container) {
-    [{ t: '第1讲 绪论', d: '2025-09-01' }, { t: '第2讲 基础概念', d: '2025-09-08' }, { t: '第3讲 进阶', d: '2025-09-15' }].forEach(v => {
-      const el = document.createElement('div'); el.className = 'video-item';
-      el.innerHTML = `<span class="video-icon">🎬</span><span class="video-title">${v.t}</span><span class="video-meta">${v.d}</span><span class="video-download">⬇️</span>`;
-      container.appendChild(el);
+    const username = $('study-username').value.trim(), password = $('study-password').value;
+    window.jlu.study.getVideos({ username, password, courseId: c.id }).then(result => {
+      if (result.ok && result.videos && result.videos.length) {
+        result.videos.forEach(v => {
+          const el = document.createElement('div'); el.className = 'video-item';
+          el.innerHTML = `<span class="video-icon">🎬</span><span class="video-title">${v.title || v.t}</span><span class="video-meta">${v.date || v.d || ''}</span><span class="video-download">⬇️</span>`;
+          l.appendChild(el);
+        });
+      } else {
+        l.innerHTML = '<div class="notif-empty">暂无视频</div>';
+      }
+    }).catch(() => {
+      l.innerHTML = '<div class="notif-empty">暂无视频</div>';
     });
   }
 };
@@ -800,14 +764,14 @@ const coursePage = {
           if (result.ok) { Log.info('CourseGrab', '抢课已启动'); Toast.success('抢课已启动'); }
           else { Log.error('CourseGrab', '抢课启动失败', { error: result.error }); Toast.error(result.error || '启动失败'); $('course-start').disabled = false; $('course-stop').disabled = true; }
         } catch (e) { Log.error('CourseGrab', '抢课启动异常', e); Toast.error('启动失败：' + e.message); $('course-start').disabled = false; $('course-stop').disabled = true; }
-      } else { Log.debug('CourseGrab', '使用演示数据启动抢课'); Toast.success('抢课已启动（演示）'); }
+      }
     });
     $('course-stop')?.addEventListener('click', async () => {
       Log.info('CourseGrab', '停止抢课');
       if (!isDemo()) {
         try { await window.jlu.course.stop(); Log.info('CourseGrab', '抢课已停止'); Toast.info('抢课已停止'); }
         catch (e) { Log.error('CourseGrab', '停止失败', e); Toast.error('停止失败：' + e.message); }
-      } else { Log.debug('CourseGrab', '演示停止抢课'); Toast.info('抢课已停止（演示）'); }
+      }
       $('course-start').disabled = false; $('course-stop').disabled = true; coursePage.log('已停止', 'warn');
     });
   },
@@ -819,11 +783,6 @@ const coursePage = {
 // ═════════════════════════════════════════════════════════════════
 const gradePage = {
   init() {
-    $('grade-load-demo')?.addEventListener('click', () => {
-      if (!isDevMode) return Toast.info('请先开启开发者模式');
-      Log.debug('Grade', '使用演示数据');
-      gradePage.render(gradePage.demoGrades());
-    });
     $('grade-sync-edu')?.addEventListener('click', async () => {
       if (isDemo()) return Toast.warn('演示模式下无法同步');
       Log.info('Grade', '开始同步成绩');
@@ -839,15 +798,6 @@ const gradePage = {
       if (gradeRes.ok) { Log.info('Grade', '成绩同步成功', { count: gradeRes.grades.length }); gradePage.render(gradeRes.grades); Toast.success(`同步成功，获取 ${gradeRes.grades.length} 条成绩`); }
       else { Log.error('Grade', '成绩同步失败', { error: gradeRes.error }); Toast.error(gradeRes.error); }
     });
-  },
-  demoGrades() {
-    return [
-      { semester: '2025-1', name: '高等数学A', credit: 5, score: 92 }, { semester: '2025-1', name: '大学物理', credit: 4, score: 85 },
-      { semester: '2025-1', name: '程序设计', credit: 3, score: 96 }, { semester: '2025-1', name: '线性代数', credit: 3, score: 78 },
-      { semester: '2025-1', name: '大学英语', credit: 2, score: 88 }, { semester: '2025-1', name: '体育', credit: 1, score: 90 },
-      { semester: '2024-2', name: '概率论', credit: 3, score: 73 }, { semester: '2024-2', name: '离散数学', credit: 3, score: 88 },
-      { semester: '2024-2', name: '数据结构', credit: 4, score: 91 }, { semester: '2024-2', name: '数字电路', credit: 3, score: 76 },
-    ];
   },
   render(grades) {
     // JLU official GPA scale (校教字〔2016〕102号)
@@ -883,21 +833,10 @@ const examPage = {
         else if (result.error) Log.warn('Exam', '获取考试安排失败', { error: result.error });
       } catch (e) { Log.error('Exam', '获取考试安排异常', e); /* ignore on init */ }
     }
-    $('exam-load-demo')?.addEventListener('click', () => {
-      if (!isDevMode) return Toast.info('请先开启开发者模式');
-      Log.debug('Exam', '使用演示数据');
-      const y = new Date().getFullYear();
-      examPage.render([
-        { name: '高等数学A', type: '期末', date: `${y}-08-25`, time: '09:00', location: '逸夫楼301', seat: '15' },
-        { name: '大学物理', type: '期末', date: `${y}-08-27`, time: '14:00', location: '数学楼201', seat: '22' },
-        { name: '程序设计', type: '期末', date: `${y}-08-29`, time: '09:00', location: '计算机楼401', seat: '08' },
-        { name: '线性代数', type: '期末', date: `${y}-09-01`, time: '14:00', location: '逸夫楼102', seat: '31' },
-        { name: '体育', type: '考查', date: `${y}-07-28`, time: '10:00', location: '体育馆', seat: '—' },
-      ]);
-    });
   },
   render(exams) {
     const now = Date.now(), list = $('exam-list'); list.innerHTML = '';
+    if (!exams || !exams.length) { list.innerHTML = '<div class="notif-empty">暂无考试安排</div>'; return; }
     exams.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(e => {
       const diff = new Date(`${e.date} ${e.time}`).getTime() - now;
       const days = Math.floor(diff / 86400000), hours = Math.floor((diff % 86400000) / 3600000);
@@ -927,21 +866,6 @@ const gradPage = {
         }
       } catch (e) { Log.error('Graduation', '培养方案获取异常', e); /* ignore on init */ }
     }
-    $('grad-load-demo')?.addEventListener('click', () => {
-      if (!isDevMode) return Toast.info('请先开启开发者模式');
-      Log.debug('Graduation', '使用演示数据');
-      gradPage.render({
-        totalRequired: 170, totalCompleted: 88, overallPercentage: 52,
-        categories: [
-          { name: '公共基础课', required: 40, completed: 28, percentage: 70, missingCourses: ['军事理论'], done: false },
-          { name: '学科基础课', required: 35, completed: 24, percentage: 69, missingCourses: ['编译原理', '操作系统'], done: false },
-          { name: '专业核心课', required: 30, completed: 8, percentage: 27, missingCourses: ['计算机网络', '数据库', '软件工程', '算法设计', 'AI'], done: false },
-          { name: '专业选修课', required: 25, completed: 4, percentage: 16, missingCourses: ['机器学习', '图形学', '信安', '嵌入式'], done: false },
-          { name: '通识选修课', required: 16, completed: 12, percentage: 75, missingCourses: [], done: false },
-          { name: '实践环节', required: 24, completed: 12, percentage: 50, missingCourses: ['生产实习', '毕设'], done: false },
-        ]
-      });
-    });
   },
   render(data) {
     $('grad-progress').style.width = data.overallPercentage + '%';
@@ -977,12 +901,6 @@ const classroomPage = {
           if (result.ok) { Log.info('Classroom', '查询成功', { count: rooms.length }); Toast.success(`找到 ${rooms.length} 间空教室`); classroomPage.render(rooms); }
           else { Log.error('Classroom', '查询失败', { error: result.error }); Toast.error(result.error || '查询失败'); }
         } catch (e) { Log.error('Classroom', '查询异常', e); Toast.error('查询失败：' + e.message); }
-      } else {
-        Log.debug('Classroom', '使用演示数据');
-        const rooms = [];
-        const blds = bld === 'all' ? ['逸夫楼', '计算机楼', '数学楼', '外语楼'] : [bld];
-        blds.forEach(b => { for (let r = 1; r <= 5; r++) { if (Math.random() > 0.4) rooms.push({ building: b, room: `${r}0${Math.ceil(Math.random() * 9)}`, capacity: 60 + Math.floor(Math.random() * 100) }); } });
-        classroomPage.render(rooms);
       }
     });
   },
@@ -1017,12 +935,6 @@ const reviewPage = {
           Log.info('Review', '搜索结果', { count: courses.length });
           reviewPage.renderResults(courses);
         } catch (e) { Log.error('Review', '搜索失败', e); Toast.error('搜索失败：' + e.message); }
-      } else {
-        Log.debug('Review', '使用演示数据');
-        const results = reviewPage.demoCourses().filter(c =>
-          c.name.toLowerCase().includes(kw) || c.teacher.toLowerCase().includes(kw)
-        );
-        reviewPage.renderResults(results);
       }
     });
     $('review-back-btn')?.addEventListener('click', () => {
@@ -1046,17 +958,6 @@ const reviewPage = {
     });
     // Search on Enter
     $('review-search')?.addEventListener('keydown', e => { if (e.key === 'Enter') $('review-search-btn')?.click(); });
-  },
-
-  demoCourses() {
-    return [
-      { id: 'c1', name: '高等数学A', teacher: '张三', department: '数学学院', rating: 4.5, difficulty: 4, workload: 4, reviews: 128 },
-      { id: 'c2', name: '程序设计基础', teacher: '王五', department: '计算机学院', rating: 4.8, difficulty: 3, workload: 3, reviews: 95 },
-      { id: 'c3', name: '大学物理', teacher: '李四', department: '物理学院', rating: 4.2, difficulty: 4, workload: 3, reviews: 87 },
-      { id: 'c4', name: '数据结构', teacher: '赵六', department: '计算机学院', rating: 4.6, difficulty: 4, workload: 4, reviews: 76 },
-      { id: 'c5', name: '线性代数', teacher: '孙七', department: '数学学院', rating: 4.0, difficulty: 3, workload: 3, reviews: 104 },
-      { id: 'c6', name: '大学英语', teacher: '周八', department: '外语学院', rating: 3.8, difficulty: 2, workload: 2, reviews: 156 },
-    ];
   },
 
   renderResults(courses) {
@@ -1096,17 +997,6 @@ const reviewPage = {
       } catch {}
     }
     if (!reviews || !reviews.length) {
-      // Use combined demo reviews from backend
-      const client = { getDemoReviews: () => [
-        { courseId: 'c1', author: '匿名', rating: 5, content: '老师讲得很好，深入浅出，考试不难但需要认真复习。', semester: '2025-1', helpful: 42, difficulty: 4, workload: 4 },
-        { courseId: 'c1', author: '匿名', rating: 4, content: '作业比较多，但能学到东西。建议多做课后题。', semester: '2025-1', helpful: 28, difficulty: 4, workload: 4 },
-        { courseId: 'c2', author: '匿名', rating: 5, content: 'C语言入门首选，老师很有耐心，实验课很有趣。', semester: '2025-1', helpful: 35, difficulty: 3, workload: 3 },
-        { courseId: 'c2', author: '匿名', rating: 5, content: '给分很好，认真学能拿高分。', semester: '2024-2', helpful: 21, difficulty: 3, workload: 3 },
-        { courseId: 'c4', author: '匿名', rating: 4, content: '课程内容扎实，需要花时间理解。实验报告有点多。', semester: '2025-1', helpful: 33, difficulty: 4, workload: 4 },
-      ]};
-      reviews = client.getDemoReviews().filter(r => r.courseId === c.id);
-    }
-    if (!reviews.length) {
       list.innerHTML = '<div class="notif-empty">暂无评价，来写第一条吧</div>';
     } else {
       reviews.forEach(r => {
@@ -1157,7 +1047,7 @@ const reviewPage = {
         const result = await window.jlu.review.add(review);
         if (!result.ok) { Log.error('Review', '评价提交失败', { error: result.error }); return Toast.error(result.error || '提交失败'); }
       } catch (e) { Log.error('Review', '评价提交异常', e); return Toast.error('提交失败：' + e.message); }
-    } else { Log.debug('Review', '使用演示数据提交'); }
+    }
     Log.info('Review', '评价已提交');
     Toast.success('评价已提交');
     reviewPage.showDetail(c); // refresh
@@ -1212,22 +1102,6 @@ const cardPage = {
         }
       } catch (e) { /* ignore on init */ }
     }
-    $('card-load-demo')?.addEventListener('click', () => {
-      if (!isDevMode) return Toast.info('请先开启开发者模式');
-      Log.debug('Card', '使用演示数据');
-      $('card-balance').textContent = '342.50'; $('card-id').textContent = '卡号：2023****1234';
-      const locs = ['前卫南一食堂', '前卫南二食堂', '莘子园', '超市', '打印店', '开水房'];
-      const txns = Array.from({ length: 15 }, (_, i) => {
-        const amt = -(Math.random() * 30 + 2).toFixed(2);
-        return { time: new Date(Date.now() - i * 3600000 * (Math.random() * 4 + 1)).toLocaleString('zh-CN'), location: locs[Math.floor(Math.random() * locs.length)], amount: parseFloat(amt) };
-      });
-      const list = $('card-transactions'); list.innerHTML = '';
-      txns.forEach(t => {
-        const el = document.createElement('div'); el.className = 'txn-item';
-        el.innerHTML = `<span class="txn-time">${t.time}</span><span class="txn-location">${t.location}</span><span class="txn-amount ${t.amount < 0 ? 'expense' : 'income'}">${t.amount > 0 ? '+' : ''}${t.amount}</span>`;
-        list.appendChild(el);
-      });
-    });
   }
 };
 
@@ -1235,12 +1109,7 @@ const cardPage = {
 // PAGE: Cafeteria
 // ═════════════════════════════════════════════════════════════════
 const cafePage = {
-  cafes: [
-    { id: 'south1', name: '前卫南一食堂', location: '中心校区', menu: { breakfast: ['豆浆油条', '小米粥', '煎饼果子'], lunch: ['红烧肉套餐', '麻辣香锅', '鸡公煲'], dinner: ['黄焖鸡', '烤肉饭', '砂锅米线'] } },
-    { id: 'south2', name: '前卫南二食堂', location: '中心校区', menu: { breakfast: ['豆腐脑', '肉夹馍'], lunch: ['水煮鱼', '麻辣烫', '盖浇饭'], dinner: ['炸鸡汉堡', '酸辣粉'] } },
-    { id: 'shenzi', name: '莘子园', location: '中心校区', menu: { breakfast: ['八宝粥', '烧饼'], lunch: ['回锅肉', '鱼香肉丝', '凉皮'], dinner: ['刀削面', '炸酱面'] } },
-    { id: 'nanling1', name: '南岭一食堂', location: '南岭校区', menu: { lunch: ['套餐A', '套餐B'], dinner: ['面食'] } },
-  ],
+  cafes: [],
   async init() {
     if (!isDemo()) {
       Log.info('Cafe', '获取食堂列表');
@@ -1289,11 +1158,7 @@ const cafePage = {
 // PAGE: Bus
 // ═════════════════════════════════════════════════════════════════
 const busPage = {
-  routes: [
-    { id: 'sn', name: '前卫南 ↔ 南岭', duration: '约40分钟', times: ['7:00', '7:30', '8:00', '9:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '17:30'] },
-    { id: 'sc', name: '前卫南 ↔ 朝阳', duration: '约50分钟', times: ['7:15', '8:15', '9:15', '10:15', '13:15', '14:15', '15:15', '16:15', '17:15'] },
-    { id: 'sh', name: '前卫南 ↔ 南湖', duration: '约35分钟', times: ['7:30', '8:30', '10:00', '13:30', '15:00', '17:00'] },
-  ],
+  routes: [],
   async init() {
     if (!isDemo()) {
       Log.info('Bus', '获取校车路线');
@@ -1352,12 +1217,7 @@ const busPage = {
 // PAGE: Delivery
 // ═════════════════════════════════════════════════════════════════
 const deliveryPage = {
-  points: [
-    { name: '菜鸟驿站（前卫南）', location: '东门', hours: '08:00-21:00', carriers: ['菜鸟', '中通', '圆通', '韵达'] },
-    { name: '京东快递点', location: '南门', hours: '09:00-19:00', carriers: ['京东'] },
-    { name: '顺丰速运', location: '西门', hours: '08:30-20:00', carriers: ['顺丰'] },
-    { name: 'EMS 代收点', location: '邮局', hours: '09:00-17:00', carriers: ['EMS', '邮政'] },
-  ],
+  points: [],
   async init() {
     if (!isDemo()) {
       Log.info('Delivery', '获取快递信息');
@@ -1405,13 +1265,6 @@ const deliveryPage = {
             Toast.success('查询成功');
           } else { Log.error('Delivery', '物流查询失败', { error: result.error }); Toast.error(result.error || '查询失败'); }
         } catch (e) { Log.error('Delivery', '物流查询异常', e); Toast.error('查询失败：' + e.message); }
-      } else {
-        Log.debug('Delivery', '使用演示数据');
-        [{ time: '2026-07-25 09:30', desc: '已签收，菜鸟驿站代收' }, { time: '2026-07-25 06:15', desc: '派件中' }, { time: '2026-07-24 22:00', desc: '到达长春转运中心' }, { time: '2026-07-23 14:00', desc: '已揽收' }].forEach(t => {
-          const el = document.createElement('div'); el.className = 'timeline-item';
-          el.innerHTML = `<div class="tl-time">${t.time}</div><div class="tl-desc">${t.desc}</div>`;
-          tl.appendChild(el);
-        });
       }
     });
   }
@@ -1445,12 +1298,6 @@ const libseatPage = {
           Log.error('LibSeat', '座位查询异常', e);
           Toast.error('查询失败：' + e.message);
         }
-      } else {
-        Log.debug('LibSeat', '使用演示数据查询座位');
-        Toast.info('查询座位...（演示模式）');
-        if (isDevMode) {
-          setTimeout(() => Toast.success('找到 15 个可用座位（演示）'), 800);
-        }
       }
     });
     $('libseat-reserve')?.addEventListener('click', async () => {
@@ -1471,9 +1318,6 @@ const libseatPage = {
           Log.error('LibSeat', '预约异常', e);
           Toast.error('预约失败：' + e.message);
         }
-      } else {
-        Log.debug('LibSeat', '使用演示数据预约');
-        Toast.success(`座位 ${s} 预约成功（演示）`);
       }
     });
     $('libseat-auto-start-btn')?.addEventListener('click', async () => {
@@ -1493,9 +1337,6 @@ const libseatPage = {
           Log.error('LibSeat', '自动预约异常', e);
           Toast.error('启动失败：' + e.message);
         }
-      } else {
-        Log.debug('LibSeat', '使用演示数据启动自动预约');
-        Toast.success('自动预约已启动（演示）');
       }
     });
   }
@@ -1505,15 +1346,8 @@ const libseatPage = {
 // PAGE: Campus Map
 // ═════════════════════════════════════════════════════════════════
 const mapPage = {
-  places: [
-    { name: '逸夫楼', type: 'teaching', campus: '前卫南', desc: '主要教学楼' }, { name: '计算机楼', type: 'teaching', campus: '前卫南', desc: '计算机学院' },
-    { name: '图书馆', type: 'library', campus: '前卫南', desc: '中心图书馆' }, { name: '一食堂', type: 'food', campus: '前卫南', desc: '大众餐饮' },
-    { name: '莘子园', type: 'food', campus: '前卫南', desc: '清真/快餐' }, { name: '体育馆', type: 'sport', campus: '前卫南', desc: '室内运动' },
-    { name: '菜鸟驿站', type: 'delivery', campus: '前卫南', desc: '快递收发' }, { name: '校医院', type: 'hospital', campus: '前卫南', desc: '校内医疗' },
-  ],
-  categories: [
-    { id: 'all', icon: '🏠', name: '全部' }, { id: 'teaching', icon: '🏫', name: '教学楼' }, { id: 'food', icon: '🍜', name: '食堂' }, { id: 'library', icon: '📚', name: '图书馆' }, { id: 'delivery', icon: '📦', name: '快递' },
-  ],
+  places: [],
+  categories: [{ id: 'all', icon: '🏠', name: '全部' }],
   async init() {
     if (!isDemo()) {
       Log.info('Map', '获取地图数据');
@@ -1553,10 +1387,6 @@ const mapPage = {
           if (result.ok) { Log.info('Map', '地点搜索成功', { count: result.places?.length || 0 }); Toast.success(`找到 ${result.places?.length || 0} 个地点`); mapPage.render(null, result.places); }
           else { Log.error('Map', '地点搜索失败', { error: result.error }); Toast.error(result.error || '搜索失败'); }
         } catch (e) { Log.error('Map', '地点搜索异常', e); Toast.error('搜索失败：' + e.message); }
-      } else {
-        Log.debug('Map', '使用演示数据搜索');
-        const filtered = mapPage.places.filter(p => p.name.includes(kw) || p.desc.includes(kw));
-        mapPage.render(null, filtered);
       }
     });
     mapPage.render();
@@ -1585,10 +1415,6 @@ const weatherPage = {
     const campus = $('weather-campus')?.value || 'south';
     let data;
     if (!isDemo()) { Log.info('Weather', '获取天气', { campus }); try { data = await window.jlu.weather.get(campus); Log.info('Weather', '天气获取成功'); } catch { data = null; } }
-    if (!data || data.error) {
-      Log.debug('Weather', '使用演示数据');
-      data = { campus: '前卫南', current: { temp: 26, feelsLike: 28, humidity: 65, windSpeed: 12, desc: '局部多云' }, forecast: Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() + i); return { date: d.toISOString().split('T')[0], max: 28 + Math.random() * 4, min: 18 + Math.random() * 3, desc: ['☀️ 晴', '🌤️ 多云', '⛅ 阴', '🌧️ 小雨'][i % 4], rainChance: [0, 10, 30, 60][i % 4] }; }), advice: '🌤️ 微凉，建议穿长袖/薄外套' };
-    }
     if (!data || data.error) {
       data = { campus: '前卫南', current: { temp: 26, feelsLike: 28, humidity: 65, windSpeed: 12, desc: '局部多云' }, forecast: Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() + i); return { date: d.toISOString().split('T')[0], max: 28 + Math.random() * 4, min: 18 + Math.random() * 3, desc: ['☀️ 晴', '🌤️ 多云', '⛅ 阴', '🌧️ 小雨'][i % 4], rainChance: [0, 10, 30, 60][i % 4] }; }), advice: '🌤️ 微凉，建议穿长袖/薄外套' };
     }
@@ -1619,7 +1445,7 @@ const notifPage = {
 
     $('notif-start')?.addEventListener('click', async () => { Log.info('Notif', '启动通知监控'); notifPage.saveConfig(); if (!isDemo()) await window.jlu.notification.start(); notifPage.setStatus(true); Log.info('Notif', '监控已启动'); Toast.success('监控已启动'); });
     $('notif-stop')?.addEventListener('click', async () => { Log.info('Notif', '停止通知监控'); if (!isDemo()) await window.jlu.notification.stop(); notifPage.setStatus(false); Log.info('Notif', '监控已停止'); Toast.info('已停止'); });
-    $('notif-check')?.addEventListener('click', async () => { Log.info('Notif', '立即检查通知'); Toast.info('检查中...'); if (isDemo()) { notifPage.addDemo(); } else { try { await window.jlu.notification.checkNow(); } catch (e) { Log.error('Notif', '检查通知失败', e); } } Log.info('Notif', '检查完成'); Toast.success('检查完成'); $('notif-last-check').textContent = `上次检查：${new Date().toLocaleTimeString('zh-CN')}`; });
+    $('notif-check')?.addEventListener('click', async () => { Log.info('Notif', '立即检查通知'); Toast.info('检查中...'); if (!isDemo()) { try { await window.jlu.notification.checkNow(); } catch (e) { Log.error('Notif', '检查通知失败', e); } } Log.info('Notif', '检查完成'); Toast.success('检查完成'); $('notif-last-check').textContent = `上次检查：${new Date().toLocaleTimeString('zh-CN')}`; });
     $('notif-test')?.addEventListener('click', () => { Log.info('Notif', '发送测试通知'); if (!isDemo()) window.jlu.notification.test(); Toast.info('测试通知已发送'); });
     $('notif-use-vpn')?.addEventListener('change', e => { $('notif-vpn-fields').style.display = e.target.checked ? '' : 'none'; });
 
@@ -1665,7 +1491,6 @@ const notifPage = {
   },
   saveConfig() { if (!isDemo()) window.jlu.notification.updateConfig({ interval: +$('notif-interval').value, channel: +$('notif-channel').value, useVpn: $('notif-use-vpn').checked, skipKeywords: $('notif-skip-keywords').value.split(/[,，]+/).map(s => s.trim()).filter(Boolean) }); },
   setStatus(r) { $('notif-status-badge').textContent = r ? '监控中' : '未启用'; $('notif-status-badge').className = r ? 'badge badge-success' : 'badge'; $('notif-start').disabled = r; $('notif-stop').disabled = !r; },
-  addDemo() { notifPage.notifications.unshift({ id: Date.now(), title: '关于做好2026年暑假工作的通知', time: '2026-07-25', dept: '校长办公室', content: '根据学校安排，2026年暑假从7月27日开始，请各部门做好假期值班和安全工作。', read: false }); notifPage.render(); },
   render() {
     const list = $('notif-list'); list.innerHTML = '';
     if (!notifPage.notifications.length) { list.innerHTML = '<div class="notif-empty">暂无通知</div>'; return; }
@@ -1792,7 +1617,6 @@ const pomoPage = {
   async loadStatus() {
     let status;
     if (!isDemo()) { Log.info('Pomo', '获取状态'); status = await window.jlu.pomo.getStatus(); Log.info('Pomo', '状态获取成功', { sessions: status.today?.sessions, todos: status.todos?.length }); }
-    else { Log.debug('Pomo', '使用演示数据'); status = { today: { sessions: 3, totalMinutes: 75, history: [{ time: '09:30', duration: 25, todoTitle: '复习高数' }, { time: '10:05', duration: 25, todoTitle: '写实验报告' }, { time: '10:40', duration: 25, todoTitle: '' }] }, todos: pomoPage._demoTodos() }; }
 
     pomoPage.sessions = status.today?.sessions || 0;
     pomoPage.totalMin = status.today?.totalMinutes || 0;
@@ -1814,15 +1638,6 @@ const pomoPage = {
     pomoPage.renderTodos();
   },
 
-  _demoTodos() {
-    return [
-      { id: 'd1', title: '复习高等数学第5章', done: false, priority: 'high', pomodoros: 2, totalMinutes: 50 },
-      { id: 'd2', title: '写数据结构实验报告', done: false, priority: 'urgent', pomodoros: 1, totalMinutes: 25 },
-      { id: 'd3', title: '背英语单词 Unit 8', done: false, priority: 'normal', pomodoros: 0, totalMinutes: 0 },
-      { id: 'd4', title: '整理计算机网络笔记', done: true, priority: 'normal', pomodoros: 3, totalMinutes: 75, completedAt: new Date().toISOString() },
-    ];
-  },
-
   // ─── Todo CRUD ───────────────────────────────────────────
   async addTodo() {
     const input = $('pomo-todo-input');
@@ -1831,7 +1646,6 @@ const pomoPage = {
     Log.info('Pomo', '添加待办', { title, priority });
 
     if (!isDemo()) await window.jlu.pomo.addTodo({ title, priority });
-    else { Log.debug('Pomo', '使用演示数据添加待办'); if (!pomoPage._todos) pomoPage._todos = []; pomoPage._todos.unshift({ id: Date.now().toString(), title, done: false, priority, pomodoros: 0, totalMinutes: 0 }); }
 
     input.value = '';
     pomoPage.renderTodos();
@@ -1840,13 +1654,11 @@ const pomoPage = {
 
   async toggleTodo(id) {
     if (!isDemo()) await window.jlu.pomo.toggleTodo(id);
-    else { const t = pomoPage._todos?.find(x => x.id === id); if (t) t.done = !t.done; }
     pomoPage.renderTodos();
   },
 
   async deleteTodo(id) {
     if (!isDemo()) await window.jlu.pomo.deleteTodo(id);
-    else { pomoPage._todos = pomoPage._todos?.filter(x => x.id !== id); }
     pomoPage.renderTodos();
   },
 
@@ -1926,7 +1738,7 @@ const calPage = {
             if (result.path) window.jlu?.shell?.showItemInFolder(result.path);
           } else { Log.error('Cal', '课程表导出失败', { error: result.error }); Toast.error(result.error || '导出失败'); }
         } catch (e) { Log.error('Cal', '课程表导出异常', e); Toast.error('导出失败：' + e.message); }
-      } else { Log.debug('Cal', '使用演示数据导出课程表'); Toast.success('课程表已导出为 .ics 文件（演示）'); }
+      }
     });
     $('cal-export-exams')?.addEventListener('click', async () => {
       Log.info('Cal', '导出考试安排');
@@ -1942,7 +1754,7 @@ const calPage = {
             if (result.path) window.jlu?.shell?.showItemInFolder(result.path);
           } else { Log.error('Cal', '考试安排导出失败', { error: result.error }); Toast.error(result.error || '导出失败'); }
         } catch (e) { Log.error('Cal', '考试安排导出异常', e); Toast.error('导出失败：' + e.message); }
-      } else { Log.debug('Cal', '使用演示数据导出考试安排'); Toast.success('考试安排已导出为 .ics 文件（演示）'); }
+      }
     });
   }
 };
@@ -2022,14 +1834,7 @@ const settingsPage = {
   },
 
   reloadPageData() {
-    // Re-initialize pages that show demo data based on dev mode
     schedulePage.renderCourses();
-    if (isDevMode) {
-      gradePage.init();
-      examPage.init();
-      gradPage.init();
-      cardPage.init();
-    }
   },
 
   async loadAutoStart() {
@@ -2063,16 +1868,6 @@ const settingsPage = {
       Log.info('Settings', '加载凭据列表');
       systems = await window.jlu.cred.getSystems();
       saved = await window.jlu.cred.getAll();
-    } else {
-      systems = [
-        { id: 'edu', name: '教务系统', desc: 'icourses.jlu.edu.cn，成绩/课表/选课/考试', icon: 'book' },
-        { id: 'study', name: '学在吉大', desc: 'study.jlu.edu.cn，视频课程', icon: 'book' },
-        { id: 'drcom', name: 'DrCOM 校园网', desc: '校园网认证登录', icon: 'network' },
-        { id: 'campuscard', name: '校园一卡通', desc: '余额/消费查询', icon: 'bankCard' },
-        { id: 'vpn', name: 'VPN', desc: 'Web VPN 登录（校外访问）', icon: 'globe' },
-        { id: 'libseat', name: '图书馆座位', desc: 'libseat.jlu.edu.cn，座位预约', icon: 'seat' },
-      ];
-      saved = { edu: { username: '2023****', hasPassword: true, maskedPassword: '••••••••' } };
     }
     settingsPage.renderCredentials(systems, saved);
   },
@@ -2128,18 +1923,6 @@ const settingsPage = {
   async loadCredits() {
     let credits;
     if (!isDemo()) credits = await window.jlu.app.getCredits();
-    else credits = [
-      { name: 'jlu-vpns-dokodemo-door', author: 'MerlynAllen', url: 'https://github.com/MerlynAllen/jlu-vpns-dokodemo-door', desc: 'VPN URL 转换', license: 'MIT' },
-      { name: 'drcom-jlu-qt', author: 'code4lala', url: 'https://github.com/code4lala/drcom-jlu-qt', desc: 'DrCOM 校园网认证', license: 'GPL-3.0' },
-      { name: 'JLU_schedule', author: 'JFyuhong', url: 'https://github.com/JFyuhong/JLU_schedule', desc: '吉林大学课表', license: 'MIT' },
-      { name: 'StudyAtJLU_Desktop', author: 'RikaCelery', url: 'https://github.com/RikaCelery/StudyAtJLU_Desktop', desc: '学在吉大桌面客户端', license: 'MIT' },
-      { name: 'JLUiCourse', author: 'wzyyyyyyy', url: 'https://github.com/wzyyyyyyy/JLUiCourse', desc: '自动抢课助手', license: 'MIT' },
-      { name: 'JLU LibSeat PC Wide', author: 'flash122u', url: 'https://github.com/flash122u/jlu-libseat-pc-wide', desc: '图书馆座位预约增强', license: 'MIT' },
-      { name: 'Reachee', author: 'TechCiel', url: 'https://github.com/TechCiel/Reachee', desc: 'OA 通知爬虫', license: 'WTFPL' },
-      { name: 'IconPark', author: 'ByteDance', url: 'https://github.com/bytedance/IconPark', desc: '2600+ SVG 图标库', license: 'Apache-2.0' },
-      { name: 'Open-Meteo', author: 'Open-Meteo', url: 'https://open-meteo.com', desc: '开源天气 API', license: 'CC-BY-4.0' },
-      { name: 'Electron', author: 'OpenJS Foundation', url: 'https://www.electronjs.org', desc: '跨平台桌面应用框架', license: 'MIT' },
-    ];
     settingsPage.renderCredits(credits);
   },
 
@@ -2178,13 +1961,7 @@ const pctoolboxPage = {
       $('pctoolbox-optimize').disabled = true;
       $('pctoolbox-optimize').textContent = '优化中...';
       try {
-        let result;
-        if (!isDemo()) {
-          result = await window.jlu.pc.optimizeMemory();
-        } else {
-          Log.debug('PCToolbox', '使用演示数据');
-          result = await pctoolboxPage._simulateOptimize();
-        }
+        let result = await window.jlu.pc.optimizeMemory();
         if (result.ok) {
           Log.info('PCToolbox', '内存优化完成', { freed: result.freed });
           pctoolboxPage._showResult(result);
@@ -2208,9 +1985,6 @@ const pctoolboxPage = {
       if (!isDemo()) {
         Log.info('PCToolbox', '获取内存信息');
         mem = await window.jlu.pc.getMemInfo();
-      } else {
-        Log.debug('PCToolbox', '使用演示内存数据');
-        mem = { total: 16*1073741824, free: 4*1073741824 };
       }
       $('pctoolbox-remaining').textContent = pctoolboxPage._formatBytes(mem.free);
     } catch {
@@ -2226,22 +2000,6 @@ const pctoolboxPage = {
     $('pctoolbox-freed-detail').textContent = pctoolboxPage._formatBytes(r.freed);
     $('pctoolbox-remaining-detail').textContent = pctoolboxPage._formatBytes(r.remaining);
     $('pctoolbox-result').style.display = '';
-  },
-
-  _simulateOptimize() {
-    const totalMem = 16 * 1073741824;
-    const usedBefore = Math.floor(totalMem * (0.6 + Math.random() * 0.15));
-    const freed = Math.floor(usedBefore * (0.12 + Math.random() * 0.1));
-    const usedAfter = usedBefore - freed;
-    const remaining = totalMem - usedAfter;
-    return Promise.resolve({
-      ok: true,
-      before: usedBefore,
-      after: usedAfter,
-      freed: freed,
-      remaining: remaining,
-      total: totalMem
-    });
   },
 
   _formatBytes(bytes) {
@@ -2355,7 +2113,6 @@ const devcliPage = {
       // Card
       'card.getBalance': { desc: '获取校园卡余额', example: 'card.getBalance { cardNumber: "..." }', params: ['config: { cardNumber? }'] },
       'card.getTransactions': { desc: '获取消费流水', example: 'card.getTransactions { cardNumber: "..." }', params: ['config: { cardNumber? }'] },
-      'card.getDemo': { desc: '获取演示校园卡数据', example: 'card.getDemo', params: [] },
       // Cafeteria
       'cafeteria.getList': { desc: '获取食堂列表', example: 'cafeteria.getList', params: [] },
       'cafeteria.getCrowd': { desc: '获取食堂拥挤度', example: 'cafeteria.getCrowd "cafe1"', params: ['id: string'] },
@@ -2367,16 +2124,13 @@ const devcliPage = {
       // Grade
       'grade.get': { desc: '获取成绩数据', example: 'grade.get { username: "...", password: "..." }', params: ['config: object'] },
       'grade.calcGPA': { desc: '计算 GPA', example: 'grade.calcGPA [{ name: "高数", score: 95, credit: 5 }]', params: ['courses: array'] },
-      'grade.getDemo': { desc: '获取演示成绩数据', example: 'grade.getDemo', params: [] },
       'grade.getDistribution': { desc: '获取成绩分布', example: 'grade.getDistribution [{...}]', params: ['courses: array'] },
       // Exam
       'exam.get': { desc: '获取考试安排', example: 'exam.get { semester: "2025-1" }', params: ['config: object'] },
-      'exam.getDemo': { desc: '获取演示考试数据', example: 'exam.getDemo', params: [] },
       'exam.getCountdowns': { desc: '计算考试倒计时', example: 'exam.getCountdowns [{ date: "2026-01-15", time: "08:00" }]', params: ['exams: array'] },
       // Grad
       'grad.getTemplates': { desc: '获取培养方案模板', example: 'grad.getTemplates', params: [] },
       'grad.analyze': { desc: '分析学分完成进度', example: 'grad.analyze "template1" [...]', params: ['templateId: string', 'courses: array'] },
-      'grad.getDemo': { desc: '获取演示学分数据', example: 'grad.getDemo', params: [] },
       // Map
       'map.getCampuses': { desc: '获取校区列表', example: 'map.getCampuses', params: [] },
       'map.getPlaces': { desc: '获取校区内设施', example: 'map.getPlaces "south"', params: ['campusId: string'] },
@@ -2384,7 +2138,6 @@ const devcliPage = {
       'map.getCategories': { desc: '获取设施分类', example: 'map.getCategories', params: [] },
       // Classroom
       'classroom.get': { desc: '查询空教室', example: 'classroom.get { date: "2026-09-01", building: "逸夫楼", startSlot: 1, endSlot: 4 }', params: ['config: { date, building?, startSlot, endSlot }'] },
-      'classroom.getDemo': { desc: '获取演示空教室数据', example: 'classroom.getDemo { building: "逸夫楼" }', params: ['config: object'] },
       // Delivery
       'delivery.getPoints': { desc: '获取校内快递点', example: 'delivery.getPoints', params: [] },
       'delivery.track': { desc: '查询快递物流', example: 'delivery.track { carrier: "yunda", trackingNo: "123456" }', params: ['config: { carrier, trackingNo }'] },

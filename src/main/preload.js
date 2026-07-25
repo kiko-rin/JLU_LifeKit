@@ -87,7 +87,6 @@ contextBridge.exposeInMainWorld('jlu', {
   card: {
     getBalance: (config) => ipcRenderer.invoke('card:getBalance', config),
     getTransactions: (config) => ipcRenderer.invoke('card:getTransactions', config),
-    getDemo: () => ipcRenderer.invoke('card:getDemo'),
   },
 
   // Cafeteria
@@ -108,14 +107,12 @@ contextBridge.exposeInMainWorld('jlu', {
   grade: {
     get: (config) => ipcRenderer.invoke('grade:get', config),
     calcGPA: (courses) => ipcRenderer.invoke('grade:calcGPA', courses),
-    getDemo: () => ipcRenderer.invoke('grade:getDemo'),
     getDistribution: (courses) => ipcRenderer.invoke('grade:getDistribution', courses),
   },
 
   // Exams
   exam: {
     get: (config) => ipcRenderer.invoke('exam:get', config),
-    getDemo: () => ipcRenderer.invoke('exam:getDemo'),
     getCountdowns: (exams) => ipcRenderer.invoke('exam:getCountdowns', exams),
   },
 
@@ -123,7 +120,6 @@ contextBridge.exposeInMainWorld('jlu', {
   grad: {
     getTemplates: () => ipcRenderer.invoke('grad:getTemplates'),
     analyze: (templateId, courses) => ipcRenderer.invoke('grad:analyze', { templateId, courses }),
-    getDemo: () => ipcRenderer.invoke('grad:getDemo'),
   },
 
   // Campus Map
@@ -137,7 +133,6 @@ contextBridge.exposeInMainWorld('jlu', {
   // Empty Classroom
   classroom: {
     get: (config) => ipcRenderer.invoke('classroom:get', config),
-    getDemo: (config) => ipcRenderer.invoke('classroom:getDemo', config),
   },
 
   // Delivery

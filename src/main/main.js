@@ -380,9 +380,6 @@ ipcMain.handle('card:getTransactions', async (_e, config) => {
   try { return { ok: true, transactions: await campusCardClient.getTransactions(config) }; }
   catch (err) { return { ok: false, error: err.message }; }
 });
-ipcMain.handle('card:getDemo', () => {
-  return { ok: true, balance: 342.50, cardId: '2023****1234', status: '正常', transactions: campusCardClient.getDemoTransactions() };
-});
 
 // ─── IPC: Cafeteria ───────────────────────────────────────────────
 ipcMain.handle('cafeteria:getList', () => cafeteriaClient.getCafeterias());
@@ -400,7 +397,6 @@ ipcMain.handle('grade:get', async (_e, config) => {
   catch (err) { return { ok: false, error: err.message }; }
 });
 ipcMain.handle('grade:calcGPA', (_e, courses) => gradeClient.calculateGPA(courses));
-ipcMain.handle('grade:getDemo', () => gradeClient.getDemoGrades());
 ipcMain.handle('grade:getDistribution', (_e, courses) => gradeClient.getDistribution(courses));
 
 // ─── IPC: Exams ──────────────────────────────────────────────────
@@ -408,13 +404,11 @@ ipcMain.handle('exam:get', async (_e, config) => {
   try { return { ok: true, exams: await examClient.getExams(config) }; }
   catch (err) { return { ok: false, error: err.message }; }
 });
-ipcMain.handle('exam:getDemo', () => examClient.getDemoExams());
 ipcMain.handle('exam:getCountdowns', (_e, exams) => examClient.getCountdowns(exams));
 
 // ─── IPC: Graduation ─────────────────────────────────────────────
 ipcMain.handle('grad:getTemplates', () => graduationTracker.getTemplates());
 ipcMain.handle('grad:analyze', (_e, { templateId, courses }) => graduationTracker.analyze(templateId, courses));
-ipcMain.handle('grad:getDemo', () => graduationTracker.getDemoProgress());
 
 // ─── IPC: Campus Map ─────────────────────────────────────────────
 ipcMain.handle('map:getCampuses', () => campusMapClient.getCampuses());
@@ -427,7 +421,6 @@ ipcMain.handle('classroom:get', async (_e, config) => {
   try { return { ok: true, classrooms: await emptyClassroomClient.getClassrooms(config) }; }
   catch (err) { return { ok: false, error: err.message }; }
 });
-ipcMain.handle('classroom:getDemo', (_e, config) => emptyClassroomClient.getDemoClassrooms(config));
 
 // ─── IPC: Delivery ───────────────────────────────────────────────
 ipcMain.handle('delivery:getPoints', () => deliveryClient.getExpressPoints());
@@ -445,7 +438,7 @@ ipcMain.handle('review:add', (_e, review) => { courseReviewClient.addReview(revi
 // ─── IPC: Weather ────────────────────────────────────────────────
 ipcMain.handle('weather:get', async (_e, campus) => {
   try { return { ok: true, ...await weatherClient.getWeather(campus) }; }
-  catch (err) { return { ok: true, ...weatherClient.getDemoWeather(), error: err.message }; }
+  catch (err) { return { ok: false, error: err.message }; }
 });
 
 // ─── IPC: Pomodoro ───────────────────────────────────────────────

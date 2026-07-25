@@ -9,8 +9,7 @@ class ExamClient {
 
   async getExams(config) {
     // In real implementation, fetch from edu system
-    // Demo fallback
-    return this.getDemoExams();
+    return [];
   }
 
   /** Calculate countdown for each exam */
@@ -30,17 +29,6 @@ class ExamClient {
     }).sort((a, b) => new Date(a.date) - new Date(b.date));
   }
 
-  getDemoExams() {
-    const y = new Date().getFullYear();
-    return [
-      { name: '高等数学A', type: '期末', date: `${y}-01-10`, time: '08:00-10:00', location: '逸夫楼301', seat: '12', courseId: 'c1' },
-      { name: '程序设计基础', type: '期末', date: `${y}-01-15`, time: '14:00-16:00', location: '计算机楼401', seat: '5', courseId: 'c2' },
-      { name: '大学物理', type: '期末', date: `${y}-01-18`, time: '08:00-10:00', location: '物理楼201', seat: '28', courseId: 'c3' },
-      { name: '数据结构', type: '期末', date: `${y}-01-22`, time: '14:00-16:00', location: '计算机楼302', seat: '18', courseId: 'c4' },
-      { name: '线性代数', type: '期末', date: `${y}-01-25`, time: '08:00-10:00', location: '数学楼101', seat: '9', courseId: 'c5' },
-      { name: '大学英语', type: '期末', date: `${y}-01-07`, time: '14:00-16:00', location: '外语楼205', seat: '32', courseId: 'c6' },
-    ];
-  }
 }
 
 module.exports = { ExamClient };

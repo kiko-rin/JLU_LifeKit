@@ -189,23 +189,6 @@ class GraduationTracker {
     };
   }
 
-  /** Demo with typical completed courses */
-  getDemoProgress() {
-    return this.analyze('cs_2022', [
-      // 通识
-      { name: '思想道德与法治', credit: 3 }, { name: '中国近现代史纲要', credit: 3 },
-      { name: '马克思主义基本原理', credit: 3 }, { name: '大学外语I', credit: 2 },
-      { name: '大学外语II', credit: 2 }, { name: '体育I', credit: 1 }, { name: '体育II', credit: 1 },
-      { name: '军事理论', credit: 2 }, { name: '大学计算机基础', credit: 2 },
-      // 数理
-      { name: '数学分析I', credit: 5 }, { name: '数学分析II', credit: 5 },
-      { name: '高等代数I', credit: 4 }, { name: '概率论与数理统计', credit: 4 },
-      { name: '大学物理I', credit: 3 },
-      // 学科基础
-      { name: '程序设计基础', credit: 3 }, { name: '离散数学', credit: 4 },
-      { name: '数据结构', credit: 4 }, { name: '数字逻辑电路', credit: 3 },
-    ]);
-  }
 }
 
 module.exports = { GraduationTracker };
