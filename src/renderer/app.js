@@ -63,10 +63,19 @@ const ThemeEngine = {
     root.style.setProperty('--card-alpha-dark', cardAlphaDark);
     root.style.setProperty('--card-blur', cardBlur + 'px');
 
+    const hasBg = this.config.background && this.config.background !== 'none';
+
+    // ─── Toggle Windows Mica vs custom bg layer ──────────────
+    if (!isDemo()) {
+      try { await window.jlu.theme.setMica(!hasBg); } catch {}
+    }
+    // Add/remove CSS class for Mica mode
+    document.body.classList.toggle('mica-mode', !hasBg);
+
     const bgLayer = document.getElementById('bg-layer');
     const bgDim = document.getElementById('bg-dim');
     if (bgLayer) {
-      if (this.config.background && this.config.background !== 'none') {
+      if (hasBg) {
         let imageUrl = '';
         if (!isDemo()) {
           try {
@@ -76,7 +85,6 @@ const ThemeEngine = {
         }
         if (!imageUrl) {
           const base = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-          // Find file from bgList
           const bg = ThemeEngine._bgList.find(b => b.id === this.config.background);
           const file = bg ? bg.file : this.config.background + '.jpg';
           imageUrl = base + '/backgrounds/' + file;
@@ -92,7 +100,9 @@ const ThemeEngine = {
         bgLayer.style.opacity = '0';
       }
     }
-    if (bgDim) {
+    if (bgDim && !hasBg) {
+      bgDim.style.backgroundColor = 'transparent';
+    } else if (bgDim) {
       const dim = this.config.bgDim ?? 0.4;
       bgDim.style.backgroundColor = isDark ? 'rgba(0,0,0,' + dim + ')' : 'rgba(255,255,255,' + (1 - dim) + ')';
     }
@@ -2033,6 +2043,117 @@ function osTotalMem() {
 }
 
 // ═════════════════════════════════════════════════════════════════
+// PAGE: Dev CLI (dev mode only)
+// ═════════════════════════════════════════════════════════════════
+const devcliPage = {
+  _ipcList: [],
+
+  init() {
+    $('devcli-exec')?.addEventListener('click', () => devcliPage.exec());
+    $('devcli-clear')?.addEventListener('click', () => {
+      $('devcli-output').textContent = '等待执行...';
+    });
+    $('devcli-input')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') devcliPage.exec();
+    });
+    $('devcli-filter')?.addEventListener('input', () => devcliPage.renderApiList());
+
+    // Build IPC list from preload API tree
+    devcliPage._buildIpcList();
+    devcliPage.renderApiList();
+  },
+
+  _buildIpcList() {
+    const apis = [];
+    if (!window.jlu) { apis.push({ channel: '⚠️ window.jlu not available (demo mode)' }); return; }
+    const walk = (obj, prefix) => {
+      for (const key of Object.keys(obj)) {
+        const val = obj[key];
+        const path = prefix ? prefix + '.' + key : key;
+        if (typeof val === 'function') {
+          apis.push({ channel: path, name: key, fn: val });
+        } else if (typeof val === 'object' && val !== null) {
+          apis.push({ channel: path, name: key, children: true });
+          walk(val, path);
+        }
+      }
+    };
+    walk(window.jlu, '');
+    this._ipcList = apis;
+  },
+
+  renderApiList() {
+    const container = $('devcli-apis');
+    if (!container) return;
+    const filter = ($('devcli-filter')?.value || '').toLowerCase();
+    let list = this._ipcList;
+    if (filter) list = list.filter(a => a.channel.toLowerCase().includes(filter));
+    container.innerHTML = '';
+    if (!list.length) { container.innerHTML = '<div class="notif-empty">无匹配接口</div>'; return; }
+    list.forEach(a => {
+      const el = document.createElement('div');
+      el.className = 'devcli-api-item';
+      el.style.cssText = 'padding:4px 6px;cursor:pointer;border-radius:4px;font-family:monospace;font-size:12px';
+      el.style.hover = 'background:var(--subtle-fill-hover)';
+      el.textContent = a.channel;
+      if (!a.children) {
+        el.addEventListener('click', () => {
+          $('devcli-input').value = a.channel;
+          $('devcli-params').value = '';
+          $('devcli-output').textContent = '点击「执行」调用此接口';
+        });
+      } else {
+        el.style.color = 'var(--text-tertiary)';
+        el.style.fontStyle = 'italic';
+      }
+      container.appendChild(el);
+    });
+  },
+
+  async exec() {
+    const input = $('devcli-input')?.value.trim();
+    if (!input) { Toast.warn('请输入命令'); return; }
+    const out = $('devcli-output');
+    out.textContent = '执行中...';
+
+    // Resolve the function from window.jlu tree by path
+    const parts = input.split('.');
+    let fn = window.jlu;
+    for (const p of parts) {
+      if (!fn || typeof fn !== 'object') {
+        out.textContent = `错误: 路径 ${input} 中的 ${p} 不可访问`;
+        return;
+      }
+      fn = fn[p];
+    }
+    if (typeof fn !== 'function') {
+      out.textContent = `错误: ${input} 不是一个函数（IPC 端点必须是函数）`;
+      return;
+    }
+
+    // Parse optional JSON params
+    let params = [];
+    const rawParams = $('devcli-params')?.value.trim();
+    if (rawParams) {
+      try {
+        params = JSON.parse(rawParams);
+        if (!Array.isArray(params)) params = [params];
+      } catch {
+        out.textContent = `错误: 参数 JSON 解析失败\n输入的参数: ${rawParams}`;
+        return;
+      }
+    }
+
+    try {
+      const result = await fn(...params);
+      out.textContent = JSON.stringify(result, null, 2);
+    } catch (e) {
+      out.textContent = `错误: ${e.message}\n${e.stack || ''}`;
+    }
+  }
+};
+
+// ═════════════════════════════════════════════════════════════════
 // INIT
 // ═════════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
@@ -2045,5 +2166,6 @@ document.addEventListener('DOMContentLoaded', () => {
   gradePage.init(); examPage.init(); gradPage.init(); classroomPage.init(); reviewPage.init();
   cardPage.init(); cafePage.init(); busPage.init(); deliveryPage.init(); libseatPage.init();
   mapPage.init(); weatherPage.init(); notifPage.init(); pomoPage.init(); calPage.init(); pctoolboxPage.init();
+  devcliPage.init();
   settingsPage.init();
 });

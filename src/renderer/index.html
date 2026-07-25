@@ -69,6 +69,10 @@
         <div class="nav-section-title">PC 百宝箱</div>
         <button class="nav-item" data-page="pctoolbox" data-label="PC 百宝箱"><span class="nav-icon" data-icon="chip"></span><span class="nav-label">PC 百宝箱</span></button>
       </div>
+      <div class="nav-section dev-only-section">
+        <div class="nav-section-title">开发者</div>
+        <button class="nav-item" data-page="devcli" data-label="CLI"><span class="nav-icon" data-icon="code"></span><span class="nav-label">API CLI</span></button>
+      </div>
       <div class="nav-section">
         <div class="nav-section-title">设置</div>
         <button class="nav-item" data-page="settings" data-label="应用设置"><span class="nav-icon" data-icon="settings"></span><span class="nav-label">应用设置</span></button>
@@ -606,6 +610,32 @@
               </div>
             </div>
             <button class="btn btn-primary" id="pctoolbox-optimize">开始优化</button>
+          </div></div>
+        </div>
+      </section>
+
+      <!-- ───── Dev CLI ───── -->
+      <section class="page" id="page-devcli">
+        <div class="page-header"><h1>API CLI</h1><p class="page-desc">开发者命令行 — 直接调用 IPC 接口</p></div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="code"></span><h3>IPC 命令执行</h3></div><div class="card-body">
+            <div class="input-row">
+              <input type="text" class="input" id="devcli-input" placeholder="输入命令，如: theme:getConfig 或 cred:getSystems" style="font-family:monospace">
+              <button class="btn btn-primary" id="devcli-exec">执行</button>
+              <button class="btn btn-secondary" id="devcli-clear">清空</button>
+            </div>
+            <div class="input-row" style="margin-top:8px">
+              <input type="text" class="input" id="devcli-params" placeholder="参数 (JSON) 可选，如: {&quot;key&quot;:&quot;devMode&quot;}" style="font-family:monospace;flex:1">
+            </div>
+          </div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="refresh"></span><h3>可用 IPC 接口</h3></div><div class="card-body">
+            <div class="devcli-filter">
+              <input type="text" class="input" id="devcli-filter" placeholder="过滤接口..." style="font-family:monospace">
+            </div>
+            <div class="devcli-apis" id="devcli-apis" style="max-height:300px;overflow-y:auto;margin-top:8px"></div>
+          </div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="close"></span><h3>执行结果</h3></div><div class="card-body">
+            <pre class="devcli-output" id="devcli-output" style="background:var(--layer);padding:12px;border-radius:var(--radius-md);font-size:12px;line-height:1.6;max-height:400px;overflow:auto;white-space:pre-wrap;word-break:break-all;font-family:monospace">等待执行...</pre>
           </div></div>
         </div>
       </section>

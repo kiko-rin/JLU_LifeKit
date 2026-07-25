@@ -209,6 +209,7 @@ contextBridge.exposeInMainWorld('jlu', {
   theme: {
     getConfig: () => ipcRenderer.invoke('theme:getConfig'),
     getBackgroundDataUrl: (bgId) => ipcRenderer.invoke('theme:getBackgroundDataUrl', bgId),
+    setMica: (enabled) => ipcRenderer.invoke('theme:setMica', enabled),
     updateConfig: (patch) => ipcRenderer.invoke('theme:updateConfig', patch),
     isDark: () => ipcRenderer.invoke('theme:isDark'),
     getBackgrounds: () => ipcRenderer.invoke('theme:getBackgrounds'),

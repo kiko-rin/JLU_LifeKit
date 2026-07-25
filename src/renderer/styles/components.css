@@ -594,3 +594,5 @@
 /* ─── Dev-only elements (hidden unless dev mode) ─────────────── */
 .dev-only { display: none; }
 .is-dev .dev-only { display: inline-flex; }
+.dev-only-section { display: none; }
+.is-dev .dev-only-section { display: block; }

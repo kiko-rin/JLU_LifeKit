@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage, Notification: ElectronNotification } = require('electron');
 const path = require('path');
+const os = require('os');
 const { startVpnServer, stopVpnServer, convertToVpnUrl, addHost, removeHost, getHosts, setHosts } = require('../modules/vpn-door');
 const { DrcomClient } = require('../modules/drcom');
 const { ScheduleStore } = require('../modules/schedule');
@@ -514,6 +515,25 @@ ipcMain.handle('cred:getSystems', () => credManager.getSystems());
 ipcMain.handle('cred:has', (_e, system) => credManager.has(system));
 
 // ─── IPC: Theme & Personalization ────────────────────────────────
+// ─── Windows Mica / Acrylic Background ─────────────────────────
+function isWin11() { return process.platform === 'win32' && parseFloat(os.release()) >= 10.0 && parseFloat(os.release().substring(os.release().lastIndexOf('.') + 1)) >= 22000; }
+
+ipcMain.handle('theme:setMica', async (_e, enabled) => {
+  try {
+    if (mainWindow && typeof mainWindow.setBackgroundMaterial === 'function') {
+      if (enabled && isWin11()) {
+        mainWindow.setBackgroundMaterial('mica');
+        // Remove fixed background color to let Mica show
+        mainWindow.setBackgroundColor('#00000000');
+      } else {
+        mainWindow.setBackgroundMaterial('none');
+        mainWindow.setBackgroundColor('#0f1923');
+      }
+      return { ok: true };
+    }
+    return { ok: false, error: 'Unsupported' };
+  } catch (e) { return { ok: false, error: e.message }; }
+});
 ipcMain.handle('theme:getBackgroundDataUrl', async (_e, bgId) => {
   try {
     const bgFiles = {
