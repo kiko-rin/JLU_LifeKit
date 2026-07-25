@@ -590,6 +590,11 @@ ipcMain.handle('app:getCredits', () => [
   { name: 'Node.js', author: 'OpenJS Foundation', url: 'https://nodejs.org', desc: 'JavaScript 运行时', license: 'MIT' },
 ]);
 
+// ─── IPC: Dev Log (main → renderer) ─────────────────────────────
+ipcMain.on('log:info', (_e, { mod, msg, data }) => { if (mainWindow) mainWindow.webContents.send('log:entry', { level: 1, module: mod, message: msg, data, time: new Date() }); });
+ipcMain.on('log:warn', (_e, { mod, msg, data }) => { if (mainWindow) mainWindow.webContents.send('log:entry', { level: 2, module: mod, message: msg, data, time: new Date() }); });
+ipcMain.on('log:error', (_e, { mod, msg, data }) => { if (mainWindow) mainWindow.webContents.send('log:entry', { level: 3, module: mod, message: msg, data, time: new Date() }); });
+
 // ─── IPC: App Settings Store (devMode, exitBehavior, etc.) ───────
 ipcMain.handle('settings:get', (_e, key) => settingsStore.get(key));
 ipcMain.handle('settings:set', (_e, { key, value }) => { settingsStore.set(key, value); });

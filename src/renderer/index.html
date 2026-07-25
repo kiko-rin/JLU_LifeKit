@@ -72,6 +72,7 @@
       <div class="nav-section dev-only-section">
         <div class="nav-section-title">开发者</div>
         <button class="nav-item" data-page="devcli" data-label="CLI"><span class="nav-icon" data-icon="code"></span><span class="nav-label">API CLI</span></button>
+        <button class="nav-item" data-page="devlog" data-label="LOG"><span class="nav-icon" data-icon="notification"></span><span class="nav-label">LOG</span></button>
       </div>
       <div class="nav-section">
         <div class="nav-section-title">设置</div>
@@ -648,6 +649,29 @@
           <div class="notif-empty" style="padding:20px;text-align:center">加载中...</div>
         </div>
       </div>
+
+      <!-- ───── Dev LOG ───── -->
+      <section class="page" id="page-devlog">
+        <div class="page-header" style="margin-bottom:0;padding:8px 0">
+          <h1 style="font-size:16px">开发者日志</h1>
+          <p class="page-desc" style="font-size:11px">程序运行日志 · 分级输出 · 仅开发者模式记录</p>
+        </div>
+        <div class="devlog-toolbar">
+          <div class="devlog-levels" id="devlog-levels">
+            <button class="devlog-lvl-btn active" data-level="-1">全部</button>
+            <button class="devlog-lvl-btn" data-level="0">DEBUG</button>
+            <button class="devlog-lvl-btn" data-level="1">INFO</button>
+            <button class="devlog-lvl-btn" data-level="2">WARN</button>
+            <button class="devlog-lvl-btn" data-level="3">ERROR</button>
+          </div>
+          <input type="text" class="devlog-filter" id="devlog-filter" placeholder="过滤模块/内容..." spellcheck="false">
+          <button class="devlog-clear" id="devlog-clear" title="清空日志">✕</button>
+          <span class="devlog-count" id="devlog-count">0 条</span>
+        </div>
+        <div class="devlog-list" id="devlog-list">
+          <div class="devlog-empty">暂无日志，开启开发者模式后操作触发记录</div>
+        </div>
+      </section>
 
       <!-- ───── Settings ───── -->
       <section class="page" id="page-settings">

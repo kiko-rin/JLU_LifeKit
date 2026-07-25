@@ -227,6 +227,18 @@ contextBridge.exposeInMainWorld('jlu', {
     optimizeMemory: () => ipcRenderer.invoke('pc:optimizeMemory'),
   },
 
+  // Dev Log (main process → renderer)
+  log: {
+    info: (mod, msg, data) => ipcRenderer.send('log:info', { mod, msg, data }),
+    warn: (mod, msg, data) => ipcRenderer.send('log:warn', { mod, msg, data }),
+    error: (mod, msg, data) => ipcRenderer.send('log:error', { mod, msg, data }),
+    onLog: (callback) => {
+      const handler = (_event, entry) => callback(entry);
+      ipcRenderer.on('log:entry', handler);
+      return () => ipcRenderer.removeListener('log:entry', handler);
+    },
+  },
+
   // App-wide Settings Store
   settings: {
     get: (key) => ipcRenderer.invoke('settings:get', key),
