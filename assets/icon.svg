@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0078d4"/>
+      <stop offset="100%" stop-color="#50e6ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
+  <text x="128" y="160" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="700" font-size="100" fill="white">JLU</text>
+  <text x="128" y="210" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="400" font-size="40" fill="rgba(255,255,255,0.85)">LifeKit</text>
+</svg>

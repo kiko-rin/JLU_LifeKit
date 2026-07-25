@@ -1,0 +1,82 @@
+{
+  "name": "jlu-lifekit",
+  "version": "2.0.0",
+  "description": "吉大生活+ - 吉林大学校园生活工具箱",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "set NODE_ENV=development&&electron .",
+    "build": "set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/&&set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/&&electron-builder",
+    "build:win": "set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/&&set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/&&electron-builder --win --x64",
+    "build:mac": "set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/&&set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/&&electron-builder --mac",
+    "build:linux": "set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/&&set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/&&electron-builder --linux",
+    "postinstall": "set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/&&set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/&&electron-builder install-app-deps"
+  },
+  "author": "JLU LifeKit Contributors",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/userElaina/Open-JLU"
+  },
+  "keywords": [
+    "jlu",
+    "jilin-university",
+    "electron",
+    "campus",
+    "vpn",
+    "drcom",
+    "schedule",
+    "gpa"
+  ],
+  "devDependencies": {
+    "electron": "^35.7.5",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.jlu.lifekit",
+    "productName": "吉大生活+",
+    "copyright": "Copyright © 2026 JLU LifeKit Contributors",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "吉大生活+"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.education"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Education"
+    }
+  },
+  "dependencies": {
+    "iconv-lite": "^0.7.3"
+  }
+}

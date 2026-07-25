@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>吉大生活+</title>
+  <link rel="stylesheet" href="styles/win11.css">
+  <link rel="stylesheet" href="styles/sidebar.css">
+  <link rel="stylesheet" href="styles/pages.css">
+  <link rel="stylesheet" href="styles/components.css">
+</head>
+<body>
+  <!-- Background Layer -->
+  <div id="bg-layer"></div>
+  <div id="bg-dim"></div>
+
+  <div class="titlebar" id="titlebar">
+    <div class="titlebar-drag">
+      <img src="icon.png" alt="吉大生活+" class="titlebar-logo-img">
+      <span class="titlebar-text">吉大生活+</span>
+    </div>
+    <div class="titlebar-controls">
+      <button class="titlebar-btn" id="btn-minimize" title="最小化"><span class="tb-icon" data-icon="minimize" data-icon-size="12"></span></button>
+      <button class="titlebar-btn" id="btn-maximize" title="最大化"><span class="tb-icon" data-icon="maximize" data-icon-size="12"></span></button>
+      <button class="titlebar-btn btn-close" id="btn-close" title="关闭"><span class="tb-icon" data-icon="close" data-icon-size="12"></span></button>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header"><div class="app-logo"><img src="icon.png" alt="+" class="logo-img"><span class="logo-text">吉大生活+</span></div></div>
+      <div class="nav-section">
+        <div class="nav-section-title">首页</div>
+        <button class="nav-item active" data-page="home" data-label="首页"><span class="nav-icon" data-icon="home"></span><span class="nav-label">首页</span></button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">网络工具</div>
+        <button class="nav-item" data-page="vpn" data-label="VPN 任意门"><span class="nav-icon" data-icon="globe"></span><span class="nav-label">VPN 任意门</span></button>
+        <button class="nav-item" data-page="drcom" data-label="DrCOM 认证"><span class="nav-icon" data-icon="network"></span><span class="nav-label">DrCOM 认证</span></button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">学习服务</div>
+        <button class="nav-item" data-page="schedule" data-label="课表管理"><span class="nav-icon" data-icon="calendar"></span><span class="nav-label">课表管理</span></button>
+        <button class="nav-item" data-page="study" data-label="学在吉大"><span class="nav-icon" data-icon="book"></span><span class="nav-label">学在吉大</span></button>
+        <button class="nav-item" data-page="course" data-label="选课助手"><span class="nav-icon" data-icon="target"></span><span class="nav-label">选课助手</span></button>
+        <button class="nav-item" data-page="grade" data-label="成绩 GPA"><span class="nav-icon" data-icon="chart"></span><span class="nav-label">成绩 GPA</span></button>
+        <button class="nav-item" data-page="exam" data-label="考试安排"><span class="nav-icon" data-icon="clipboard"></span><span class="nav-label">考试安排</span></button>
+        <button class="nav-item" data-page="graduation" data-label="学分追踪"><span class="nav-icon" data-icon="trophy"></span><span class="nav-label">学分追踪</span></button>
+        <button class="nav-item" data-page="classroom" data-label="空教室"><span class="nav-icon" data-icon="classroom"></span><span class="nav-label">空教室</span></button>
+        <button class="nav-item" data-page="review" data-label="课程评价"><span class="nav-icon" data-icon="star"></span><span class="nav-label">课程评价</span></button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">校园生活</div>
+        <button class="nav-item" data-page="campuscard" data-label="校园卡"><span class="nav-icon" data-icon="bankCard"></span><span class="nav-label">校园卡</span></button>
+        <button class="nav-item" data-page="cafeteria" data-label="食堂"><span class="nav-icon" data-icon="noodles"></span><span class="nav-label">食堂</span></button>
+        <button class="nav-item" data-page="bus" data-label="校车时刻"><span class="nav-icon" data-icon="bus"></span><span class="nav-label">校车时刻</span></button>
+        <button class="nav-item" data-page="delivery" data-label="快递查询"><span class="nav-icon" data-icon="delivery"></span><span class="nav-label">快递查询</span></button>
+        <button class="nav-item" data-page="libseat" data-label="图书馆座位"><span class="nav-icon" data-icon="seat"></span><span class="nav-label">图书馆座位</span></button>
+        <button class="nav-item" data-page="campusmap" data-label="校园地图"><span class="nav-icon" data-icon="map"></span><span class="nav-label">校园地图</span></button>
+        <button class="nav-item" data-page="weather" data-label="天气"><span class="nav-icon" data-icon="sun"></span><span class="nav-label">天气</span></button>
+        <button class="nav-item" data-page="notification" data-label="通知中心"><span class="nav-icon" data-icon="notification"></span><span class="nav-label">通知中心</span></button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">效率工具</div>
+        <button class="nav-item" data-page="pomodoro" data-label="番茄钟"><span class="nav-icon" data-icon="timer"></span><span class="nav-label">番茄钟</span></button>
+        <button class="nav-item" data-page="calendar" data-label="日历导出"><span class="nav-icon" data-icon="export"></span><span class="nav-label">日历导出</span></button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">PC 百宝箱</div>
+        <button class="nav-item" data-page="pctoolbox" data-label="PC 百宝箱"><span class="nav-icon" data-icon="chip"></span><span class="nav-label">PC 百宝箱</span></button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">设置</div>
+        <button class="nav-item" data-page="settings" data-label="应用设置"><span class="nav-icon" data-icon="settings"></span><span class="nav-label">应用设置</span></button>
+      </div>
+      <div class="sidebar-footer"><div class="sidebar-info"><span class="version-tag">v2.0.0</span></div></div>
+    </nav>
+
+    <main class="content" id="content">
+
+      <!-- ───── Home / Dashboard ───── -->
+      <section class="page active" id="page-home">
+        <div class="page-header"><h1>首页</h1><p class="page-desc" id="home-greeting">欢迎使用 吉大生活+</p></div>
+        <div class="page-body">
+          <div class="home-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <!-- Weather Card -->
+            <div class="card">
+              <div class="card-header"><span class="card-icon" data-icon="sun"></span><h3>天气</h3><span class="badge" id="home-weather-campus">前卫南</span></div>
+              <div class="card-body">
+                <div class="weather-current" id="home-weather" style="text-align:center;padding:8px 0">
+                  <div style="font-size:36px;font-weight:700" id="home-weather-temp">—</div>
+                  <div style="font-size:14px;color:var(--text-secondary)" id="home-weather-desc">加载中...</div>
+                </div>
+              </div>
+            </div>
+            <!-- Recent Notifications Card -->
+            <div class="card">
+              <div class="card-header"><span class="card-icon" data-icon="notification"></span><h3>最近通知</h3><span class="badge" id="home-notif-count">0</span></div>
+              <div class="card-body home-notif-list" id="home-notif-list" style="max-height:160px;overflow-y:auto">
+                <div class="notif-empty" style="padding:16px 0;text-align:center">暂无通知</div>
+              </div>
+            </div>
+            <!-- Favorites / Frequently Used -->
+            <div class="card" style="grid-column:1/-1">
+              <div class="card-header"><span class="card-icon" data-icon="star"></span><h3>常用功能</h3><span class="badge" id="home-fav-count">0</span></div>
+              <div class="card-body">
+                <div class="home-favs" id="home-favs" style="display:flex;gap:8px;flex-wrap:wrap;min-height:40px;padding:4px 0">
+                  <div class="notif-empty" style="color:var(--text-tertiary)">在侧边栏右键点击功能添加到首页</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───── VPN ───── -->
+      <section class="page" id="page-vpn">
+        <div class="page-header"><h1>VPN 任意门</h1><p class="page-desc">将任意 URL 转换为 JLU Web VPN 地址，校外访问校内资源</p></div>
+          <div class="info-banner">VPN 任意门帮助你在校外访问吉大校内资源。选择合适的代理模式：「302 跳转」最简单；「系统代理」一键代理全部流量；「Host 映射」仅代理学术网站，国内网站不受影响。</div>
+        <div class="page-body">
+          <!-- Mode Selection -->
+          <div class="card">
+            <div class="card-header"><span class="card-icon" data-icon="globe"></span><h3>代理模式</h3><span class="badge" id="vpn-status-badge">未运行</span></div>
+            <div class="card-body">
+              <div class="vpn-mode-cards" id="vpn-modes">
+                <div class="vpn-mode-card active" data-mode="redirect">
+                  <div class="vpn-mode-icon" data-icon="globe" data-icon-size="28"></div>
+                  <div class="vpn-mode-name">302 跳转</div>
+                  <div class="vpn-mode-desc">访问地址自动跳转到 VPN URL</div>
+                </div>
+                <div class="vpn-mode-card" data-mode="system">
+                  <div class="vpn-mode-icon" data-icon="network" data-icon-size="28"></div>
+                  <div class="vpn-mode-name">系统代理</div>
+                  <div class="vpn-mode-desc">设置为 OS 代理，全部流量走 VPN</div>
+                </div>
+                <div class="vpn-mode-card" data-mode="host">
+                  <div class="vpn-mode-icon" data-icon="router" data-icon-size="28"></div>
+                  <div class="vpn-mode-name">Host 映射</div>
+                  <div class="vpn-mode-desc">仅指定域名走 VPN，其余直连</div>
+                </div>
+              </div>
+              <div class="input-group" style="margin-top:12px">
+                <label class="input-label">代理端口</label>
+                <input type="number" class="input" id="vpn-port" value="8080" min="1024" max="65535">
+              </div>
+              <div class="btn-group">
+                <button class="btn btn-primary" id="vpn-start">启动服务</button>
+                <button class="btn btn-danger" id="vpn-stop" disabled>停止服务</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Host Management -->
+          <div class="card" id="vpn-host-card" style="display:none">
+            <div class="card-header"><span class="card-icon" data-icon="router"></span><h3>Host 映射管理</h3></div>
+            <div class="card-body">
+              <p class="text-muted">配置要走 VPN 的域名。其余域名直连。</p>
+              <div class="input-row" style="margin-bottom:12px">
+                <input type="text" class="input" id="vpn-host-input" placeholder="输入域名，如 scholar.google.com">
+                <button class="btn btn-primary" id="vpn-host-add">添加</button>
+              </div>
+              <div class="host-list" id="vpn-host-list"></div>
+            </div>
+          </div>
+
+          <!-- URL Convert -->
+          <div class="card">
+            <div class="card-header"><span class="card-icon" data-icon="search"></span><h3>手动转换</h3></div>
+            <div class="card-body">
+              <div class="input-group"><label class="input-label">目标网址</label><div class="input-row"><input type="text" class="input" id="vpn-url" placeholder="如 https://scholar.google.com"><button class="btn btn-primary" id="vpn-convert">转换</button></div></div>
+              <div class="result-box" id="vpn-result" style="display:none"><label class="input-label">VPN 地址</label><div class="input-row"><input type="text" class="input" id="vpn-result-url" readonly><button class="btn btn-secondary" id="vpn-copy">复制</button><button class="btn btn-accent" id="vpn-open">打开</button></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───── DrCOM ───── -->
+      <section class="page" id="page-drcom">
+        <div class="page-header"><h1>DrCOM 校园网认证</h1><p class="page-desc">JLU 校园网 DrCOM 认证客户端</p></div>
+          <div class="info-banner">DrCOM 是吉大校园网的认证协议。连接 JLU.PC 等 WiFi 后，需输入学号密码完成认证才能上网。支持记住密码和掉线自动重连。有线网需确保 MAC 地址与网络中心注册一致。</div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="network"></span><h3>认证登录</h3><span class="badge" id="drcom-status-badge">未连接</span></div><div class="card-body">
+            <div class="form-grid">
+              <div class="input-group"><label class="input-label">认证服务器</label><input type="text" class="input" id="drcom-server" value="10.10.10.10"></div>
+              <div class="input-group"><label class="input-label">MAC 地址</label><input type="text" class="input" id="drcom-mac" placeholder="可选"></div>
+              <div class="input-group"><label class="input-label">用户名</label><input type="text" class="input" id="drcom-username" placeholder="校园网账号"></div>
+              <div class="input-group"><label class="input-label">密码</label><input type="password" class="input" id="drcom-password" placeholder="校园网密码"></div>
+            </div>
+            <div class="checkbox-group"><label class="checkbox-label"><input type="checkbox" id="drcom-remember"> 记住密码</label><label class="checkbox-label"><input type="checkbox" id="drcom-auto"> 自动登录</label></div>
+            <div class="btn-group"><button class="btn btn-primary" id="drcom-login">登录</button><button class="btn btn-danger" id="drcom-logout" disabled>注销</button></div>
+            <div class="info-panel" id="drcom-info" style="display:none">
+              <div class="info-item"><span class="info-label">状态</span><span class="info-value" id="drcom-info-status">—</span></div>
+              <div class="info-item"><span class="info-label">用户名</span><span class="info-value" id="drcom-info-user">—</span></div>
+              <div class="info-item"><span class="info-label">IP</span><span class="info-value" id="drcom-info-ip">—</span></div>
+              <div class="info-item"><span class="info-label">登录时间</span><span class="info-value" id="drcom-info-time">—</span></div>
+            </div>
+          </div></div>
+        </div>
+      </section>
+
+      <!-- ───── Schedule ───── -->
+      <section class="page" id="page-schedule">
+        <div class="page-header"><div class="page-header-row"><div><h1>课表管理</h1><p class="page-desc">吉林大学课程表查看与管理</p></div><div class="page-header-actions"><button class="btn btn-secondary" id="schedule-import"><span class="btn-icon" data-icon="download" data-icon-size="14"></span> 导入</button><button class="btn btn-primary" id="schedule-add"><span class="btn-icon" data-icon="edit" data-icon-size="14"></span> 添加课程</button></div></div></div>
+          <div class="info-banner">从教务系统导入个人课程表，按周次查看。不同周次课程可能不同（如单双周），用 ◀▶ 切换周次。支持手动添加和多课表管理。</div>
+        <div class="page-body">
+          <div class="schedule-toolbar"><div class="week-info"><span class="week-label" id="schedule-week">第 1 周</span><span class="week-date" id="schedule-date">—</span></div><div class="schedule-nav"><button class="btn btn-ghost" id="schedule-prev"><span class="btn-icon" data-icon="chevronLeft" data-icon-size="16"></span></button><span class="week-display" id="schedule-week-display">第 1 周</span><button class="btn btn-ghost" id="schedule-next"><span class="btn-icon" data-icon="chevronRight" data-icon-size="16"></span></button></div></div>
+          <div class="timetable" id="timetable"><div class="timetable-header"><div class="time-col"></div><div class="day-col">周一</div><div class="day-col">周二</div><div class="day-col">周三</div><div class="day-col">周四</div><div class="day-col">周五</div><div class="day-col">周六</div><div class="day-col">周日</div></div><div class="timetable-body" id="timetable-body"></div></div>
+        </div>
+      </section>
+
+      <!-- ───── StudyAtJlu ───── -->
+      <section class="page" id="page-study">
+        <div class="page-header"><h1>学在吉大</h1><p class="page-desc">视频课程浏览与下载</p></div>
+          <div class="info-banner">「学在吉大」是学校的在线学习平台（study.jlu.edu.cn），提供录播课程和直播回放。登录后可按课程筛选、在线观看或下载视频。</div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="wifi"></span><h3>登录</h3></div><div class="card-body">
+            <div class="form-grid"><div class="input-group"><label class="input-label">用户名</label><input type="text" class="input" id="study-username" placeholder="学号"></div><div class="input-group"><label class="input-label">密码</label><input type="password" class="input" id="study-password" placeholder="密码"></div></div>
+            <button class="btn btn-primary" id="study-login">获取课程列表</button>
+          </div></div>
+          <div class="card" id="study-courses-card" style="display:none"><div class="card-header"><span class="card-icon" data-icon="book"></span><h3>我的课程</h3></div><div class="card-body"><div class="course-grid" id="study-courses"></div></div></div>
+          <div class="card" id="study-videos-card" style="display:none"><div class="card-header"><span class="card-icon" data-icon="book"></span><h3>视频列表</h3><span class="badge" id="study-course-name"></span></div><div class="card-body"><div class="video-list" id="study-videos"></div></div></div>
+        </div>
+      </section>
+
+      <!-- ───── CourseGrab ───── -->
+      <section class="page" id="page-course">
+        <div class="page-header"><h1>选课助手</h1><p class="page-desc">JLUiCourse 自动抢课辅助工具</p></div>
+          <div class="info-banner">选课助手在选课开放期间自动循环尝试选择目标课程。先在教务系统将课程加入收藏，再填课程 ID 和账号，点击开始。建议刷新间隔 ≥1000ms。</div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="settings"></span><h3>抢课配置</h3></div><div class="card-body">
+            <div class="form-grid">
+              <div class="input-group"><label class="input-label">用户名</label><input type="text" class="input" id="course-username" placeholder="学号"></div>
+              <div class="input-group"><label class="input-label">密码</label><input type="password" class="input" id="course-password" placeholder="密码"></div>
+              <div class="input-group full-width"><label class="input-label">课程 ID（每行一个）</label><textarea class="input textarea" id="course-ids" rows="4" placeholder="CS101&#10;MATH201"></textarea></div>
+              <div class="input-group"><label class="input-label">刷新间隔 (ms)</label><input type="number" class="input" id="course-interval" value="2000" min="500"></div>
+              <div class="input-group"><label class="input-label">教务地址</label><input type="text" class="input" id="course-baseurl" value="https://icourses.jlu.edu.cn"></div>
+            </div>
+            <div class="btn-group"><button class="btn btn-primary" id="course-start"><span class="btn-icon" data-icon="target" data-icon-size="14"></span> 开始抢课</button><button class="btn btn-danger" id="course-stop" disabled><span class="btn-icon" data-icon="close" data-icon-size="14"></span> 停止</button></div>
+            <div class="log-panel" id="course-log"><div class="log-line">等待启动...</div></div>
+          </div></div>
+        </div>
+      </section>
+
+      <!-- ───── Grade ───── -->
+      <section class="page" id="page-grade">
+        <div class="page-header"><h1>成绩 & GPA</h1><p class="page-desc">教务成绩查询与 GPA 计算</p></div>
+          <div class="info-banner">查询教务系统成绩并自动计算 GPA。吉大采用 4.0 绩点制：90-100→4.0，87-89→3.7，84-86→3.3，80-83→3.0，77-79→2.7，74-76→2.3，70-73→2.0，67-69→1.7，64-66→1.3，60-63→1.0。<60→0。公式：GPA = Σ(绩点×学分) / Σ学分。</div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="chart"></span><h3>GPA 概览</h3></div><div class="card-body" id="grade-overview">
+            <div class="gpa-cards">
+              <div class="gpa-card"><div class="gpa-number" id="gpa-weighted">—</div><div class="gpa-label">加权 GPA (4.0)</div></div>
+              <div class="gpa-card"><div class="gpa-number" id="gpa-avg">—</div><div class="gpa-label">平均分</div></div>
+              <div class="gpa-card"><div class="gpa-number" id="gpa-credits">—</div><div class="gpa-label">总学分</div></div>
+              <div class="gpa-card"><div class="gpa-number" id="gpa-count">—</div><div class="gpa-label">课程数</div></div>
+            </div>
+            <p class="text-muted" style="margin-top:8px;font-size:12px">绩点换算标准：吉林大学 4.0 制（校教字〔2016〕102号）· &lt;60→0 · 60-63→1.0 · 64-66→1.3 · 67-69→1.7 · 70-73→2.0 · 74-76→2.3 · 77-79→2.7 · 80-83→3.0 · 84-86→3.3 · 87-89→3.7 · 90-100→4.0</p>
+          </div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="clipboard"></span><h3>成绩列表</h3><div style="display:flex;gap:8px;margin-left:auto"><button class="btn btn-primary" id="grade-sync-edu"><span class="btn-icon" data-icon="refresh" data-icon-size="14"></span> 同步教务</button><button class="btn btn-secondary dev-only" id="grade-load-demo">演示数据</button></div></div><div class="card-body"><div class="grade-table-wrap"><table class="grade-table" id="grade-table"><thead><tr><th>学期</th><th>课程</th><th>学分</th><th>成绩</th><th>绩点</th></tr></thead><tbody id="grade-tbody"></tbody></table></div></div></div>
+        </div>
+      </section>
+
+      <!-- ───── Exam ───── -->
+      <section class="page" id="page-exam">
+        <div class="page-header"><h1>考试安排</h1><p class="page-desc">考试时间、地点、座位号与考前倒计时</p></div>
+          <div class="info-banner">同步教务系统的考试安排，显示时间、地点、座位号和考前倒计时。红色标记表示 3 天内开考。</div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="clock"></span><h3>考试倒计时</h3><button class="btn btn-secondary dev-only" id="exam-load-demo" style="margin-left:auto">加载演示数据</button></div><div class="card-body"><div class="exam-list" id="exam-list"><div class="notif-empty">暂无考试数据</div></div></div></div>
+        </div>
+      </section>
+
+      <!-- ───── Graduation ───── -->
+      <section class="page" id="page-graduation">
+        <div class="page-header"><h1>毕业学分追踪</h1><p class="page-desc">培养方案对比，已修/未修学分可视化</p></div>
+          <div class="info-banner">对比培养方案显示各类课程的已修/未修学分进度。计科 2022 版要求总学分 170：通识 54 + 数理 28 + 学科基础 30 + 专业核心 20 + 选修 14 + 实践 24。</div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="target"></span><h3>总进度</h3><button class="btn btn-secondary dev-only" id="grad-load-demo" style="margin-left:auto">加载演示数据</button></div><div class="card-body">
+            <div class="progress-bar-wrap"><div class="progress-bar" id="grad-progress" style="width:0%"></div><span class="progress-text" id="grad-progress-text">0%</span></div>
+            <p class="text-muted" id="grad-summary" style="margin-top:8px">—</p>
+          </div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="clipboard"></span><h3>分类详情</h3></div><div class="card-body"><div class="grad-categories" id="grad-categories"></div></div></div>
+        </div>
+      </section>
+
+      <!-- ───── Empty Classroom ───── -->
+      <section class="page" id="page-classroom">
+        <div class="page-header"><h1>空教室查询</h1><p class="page-desc">按时间段查询可用空教室</p></div>
+          <div class="info-banner">查询指定时间段内没有排课的教室，方便找地方自习。选择日期和节次范围，可按教学楼筛选。绿色表示空闲。</div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="search"></span><h3>查询条件</h3></div><div class="card-body">
+            <div class="form-grid">
+              <div class="input-group"><label class="input-label">日期</label><input type="date" class="input" id="classroom-date"></div>
+              <div class="input-group"><label class="input-label">教学楼</label><select class="input select" id="classroom-building"><option value="all">全部</option><option value="逸夫楼">逸夫楼</option><option value="计算机楼">计算机楼</option><option value="数学楼">数学楼</option><option value="外语楼">外语楼</option></select></div>
+              <div class="input-group"><label class="input-label">开始节次</label><select class="input select" id="classroom-start">{1..12}</select></div>
+              <div class="input-group"><label class="input-label">结束节次</label><select class="input select" id="classroom-end">{1..12}</select></div>
+            </div>
+            <button class="btn btn-primary" id="classroom-search">查询空教室</button>
+          </div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="classroom"></span><h3>查询结果</h3></div><div class="card-body"><div class="classroom-list" id="classroom-list"><div class="notif-empty">请选择条件后查询</div></div></div></div>
+        </div>
+      </section>
+
+      <!-- ───── Course Review ───── -->
+      <section class="page" id="page-review">
+        <div class="page-header"><h1>课程评价</h1><p class="page-desc">查看学长学姐对课程/老师的真实评价</p></div>
+          <div class="info-banner">查看学长学姐对课程和老师的真实评价，包括难度、给分、作业量等，作为选课参考。评价来自学生提交，仅供参考。</div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="search"></span><h3>搜索课程</h3></div><div class="card-body">
+            <div class="input-row"><input type="text" class="input" id="review-search" placeholder="输入课程名或教师名"><button class="btn btn-primary" id="review-search-btn">搜索</button></div>
+          </div></div>
+          <div class="card" id="review-results-card" style="display:none"><div class="card-header"><span class="card-icon" data-icon="clipboard"></span><h3>搜索结果</h3></div><div class="card-body"><div class="review-list" id="review-results"></div></div></div>
+          <div class="card" id="review-detail-card" style="display:none">
+            <div class="card-header">
+              <span class="card-icon" data-icon="star"></span>
+              <h3 id="review-detail-title">课程评价</h3>
+              <button class="btn btn-secondary" id="review-back-btn" style="margin-left:auto">← 返回</button>
+            </div>
+            <div class="card-body">
+              <!-- Course Info -->
+              <div class="review-course-info" id="review-course-info"></div>
+              <!-- Reviews List -->
+              <div class="review-list" id="review-detail"></div>
+              <!-- Submit Review Form -->
+              <div class="review-submit" id="review-submit" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--divider)">
+                <h4 style="margin-bottom:12px;font-size:14px;font-weight:600">写评价</h4>
+                <div class="form-grid">
+                  <div class="input-group">
+                    <label class="input-label">综合评分</label>
+                    <div class="star-picker" id="review-star-picker">
+                      <span class="star-opt" data-val="1">☆</span>
+                      <span class="star-opt" data-val="2">☆</span>
+                      <span class="star-opt" data-val="3">☆</span>
+                      <span class="star-opt" data-val="4">☆</span>
+                      <span class="star-opt" data-val="5">☆</span>
+                    </div>
+                  </div>
+                  <div class="input-group">
+                    <label class="input-label">学期</label>
+                    <input type="text" class="input" id="review-semester" placeholder="如 2025-1" value="2026-1">
+                  </div>
+                  <div class="input-group">
+                    <label class="input-label">难度</label>
+                    <select class="input select" id="review-difficulty">
+                      <option value="1">1 - 很简单</option>
+                      <option value="2">2 - 较简单</option>
+                      <option value="3" selected>3 - 中等</option>
+                      <option value="4">4 - 较难</option>
+                      <option value="5">5 - 很难</option>
+                    </select>
+                  </div>
+                  <div class="input-group">
+                    <label class="input-label">作业量</label>
+                    <select class="input select" id="review-workload">
+                      <option value="1">1 - 很少</option>
+                      <option value="2">2 - 较少</option>
+                      <option value="3" selected>3 - 适中</option>
+                      <option value="4">4 - 较多</option>
+                      <option value="5">5 - 很多</option>
+                    </select>
+                  </div>
+                  <div class="input-group full-width">
+                    <label class="input-label">评价内容</label>
+                    <textarea class="input textarea" id="review-content" rows="4" placeholder="分享你对这门课的感受..."></textarea>
+                  </div>
+                </div>
+                <button class="btn btn-primary" id="review-submit-btn">提交评价</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───── Campus Card ───── -->
+      <section class="page" id="page-campuscard">
+        <div class="page-header"><h1>校园卡</h1><p class="page-desc">一卡通余额与消费流水查询</p></div>
+          <div class="info-banner">查询校园一卡通余额和消费流水。校园卡用于食堂、超市、打印、借书等。余额不足可到食堂充值窗口或自助机充值。</div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="bankCard"></span><h3>余额</h3></div><div class="card-body">
+            <div class="balance-display"><span class="balance-amount" id="card-balance">—</span><span class="balance-label">元</span></div>
+            <p class="text-muted" id="card-id">卡号：—</p>
+            <button class="btn btn-secondary dev-only" id="card-load-demo">加载演示数据</button>
+          </div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="clipboard"></span><h3>消费记录</h3></div><div class="card-body"><div class="txn-list" id="card-transactions"><div class="notif-empty">暂无消费记录</div></div></div></div>
+        </div>
+      </section>
+
+      <!-- ───── Cafeteria ───── -->
+      <section class="page" id="page-cafeteria">
+        <div class="page-header"><h1>食堂</h1><p class="page-desc">各食堂菜单与拥挤度</p></div>
+          <div class="info-banner">查看各校区食堂菜单推荐和实时拥挤度。高峰期（11:00-12:30、18:00-19:30）建议错峰就餐。</div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="noodles"></span><h3>食堂列表</h3></div><div class="card-body"><div class="cafeteria-grid" id="cafeteria-list"></div></div></div>
+          <div class="card" id="cafeteria-detail" style="display:none"><div class="card-header"><span class="card-icon" data-icon="book"></span><h3 id="cafeteria-name">—</h3><span class="badge" id="cafeteria-crowd">—</span></div><div class="card-body" id="cafeteria-menu"></div></div>
+        </div>
+      </section>
+
+      <!-- ───── Shuttle Bus ───── -->
+      <section class="page" id="page-bus">
+        <div class="page-header"><h1>校车时刻表</h1><p class="page-desc">多校区间班车时刻查询</p></div>
+          <div class="info-banner">吉大 6 个校区间有免费班车。选择路线查看全天时刻表和下一班车倒计时。红色=15 分钟内到站。周末班次减少。</div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="bus"></span><h3>班车路线</h3></div><div class="card-body"><div class="bus-routes" id="bus-routes"></div></div></div>
+          <div class="card" id="bus-schedule-card" style="display:none"><div class="card-header"><span class="card-icon" data-icon="clock"></span><h3 id="bus-route-name">—</h3></div><div class="card-body"><div id="bus-next" class="bus-next"></div><div class="bus-times" id="bus-times"></div></div></div>
+        </div>
+      </section>
+
+      <!-- ───── Delivery ───── -->
+      <section class="page" id="page-delivery">
+        <div class="page-header"><h1>快递查询</h1><p class="page-desc">快递追踪与校内快递点信息</p></div>
+          <div class="info-banner">输入运单号追踪快递物流。下方显示校内各快递点位置、营业时间和支持的快递公司。</div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="search"></span><h3>快递追踪</h3></div><div class="card-body">
+            <div class="form-grid">
+              <div class="input-group"><label class="input-label">快递公司</label><select class="input select" id="delivery-carrier"></select></div>
+              <div class="input-group"><label class="input-label">运单号</label><input type="text" class="input" id="delivery-no" placeholder="输入运单号"></div>
+            </div>
+            <button class="btn btn-primary" id="delivery-track">查询</button>
+          </div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="map"></span><h3>校内快递点</h3></div><div class="card-body"><div class="delivery-points" id="delivery-points"></div></div></div>
+          <div class="card" id="delivery-result-card" style="display:none"><div class="card-header"><span class="card-icon" data-icon="delivery"></span><h3>物流信息</h3></div><div class="card-body"><div class="timeline" id="delivery-timeline"></div></div></div>
+        </div>
+      </section>
+
+      <!-- ───── LibSeat ───── -->
+      <section class="page" id="page-libseat">
+        <div class="page-header"><h1>图书馆座位</h1><p class="page-desc">座位预约辅助工具</p></div>
+          <div class="info-banner">通过 libseat.jlu.edu.cn 预约图书馆座位。颜色：绿色=2h+，黄色=1-2h，橙色=30m-1h，红色=占用。自动预约在 21:00 开放次日预约时同时尝试多个候选座位。</div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="search"></span><h3>查时间段</h3></div><div class="card-body">
+            <div class="form-grid">
+              <div class="input-group"><label class="input-label">日期</label><input type="date" class="input" id="libseat-date"></div>
+              <div class="input-group"><label class="input-label">楼层</label><select class="input select" id="libseat-floor"><option value="">全部</option><option value="1">1F</option><option value="2">2F</option><option value="3">3F</option><option value="4">4F</option><option value="5">5F</option></select></div>
+              <div class="input-group"><label class="input-label">开始</label><input type="time" class="input" id="libseat-start" value="08:00"></div>
+              <div class="input-group"><label class="input-label">结束</label><input type="time" class="input" id="libseat-end" value="22:00"></div>
+            </div>
+            <button class="btn btn-primary" id="libseat-search">查询座位</button>
+          </div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="seat"></span><h3>手动预约</h3></div><div class="card-body">
+            <div class="form-grid">
+              <div class="input-group"><label class="input-label">座位号</label><input type="text" class="input" id="libseat-seat" placeholder="如 62"></div>
+              <div class="input-group"><label class="input-label">日期</label><input type="date" class="input" id="libseat-reserve-date"></div>
+              <div class="input-group"><label class="input-label">开始</label><input type="time" class="input" id="libseat-reserve-start" value="08:00"></div>
+              <div class="input-group"><label class="input-label">结束</label><input type="time" class="input" id="libseat-reserve-end" value="22:00"></div>
+            </div>
+            <button class="btn btn-primary" id="libseat-reserve">预约座位</button>
+          </div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="settings"></span><h3>自动预约</h3><span class="badge badge-warn">21:00 抢次日</span></div><div class="card-body">
+            <p class="text-muted">填写多个候选座位号（逗号分隔），同时尝试直到成功。</p>
+            <div class="form-grid">
+              <div class="input-group full-width"><label class="input-label">候选座位号</label><input type="text" class="input" id="libseat-auto-seats" placeholder="62, 63, 64"></div>
+              <div class="input-group"><label class="input-label">开始</label><input type="time" class="input" id="libseat-auto-start" value="08:00"></div>
+              <div class="input-group"><label class="input-label">结束</label><input type="time" class="input" id="libseat-auto-end" value="22:00"></div>
+            </div>
+            <div class="btn-group"><button class="btn btn-accent" id="libseat-auto-start-btn">启用自动预约</button><button class="btn btn-danger" id="libseat-auto-stop" disabled>停止</button></div>
+            <div class="seat-legend"><span class="legend-item"><span class="legend-dot green"></span>2h+</span><span class="legend-item"><span class="legend-dot yellow"></span>1-2h</span><span class="legend-item"><span class="legend-dot orange"></span>30m-1h</span><span class="legend-item"><span class="legend-dot red"></span>占用</span></div>
+          </div></div>
+        </div>
+      </section>
+
+      <!-- ───── Campus Map ───── -->
+      <section class="page" id="page-campusmap">
+        <div class="page-header"><h1>校园地图</h1><p class="page-desc">校区设施查询与导航</p></div>
+          <div class="info-banner">各校区主要设施位置标注，包括教学楼、食堂、图书馆、快递点、体育馆、校医院等。点击分类标签筛选，输入关键词搜索。</div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="search"></span><h3>搜索地点</h3></div><div class="card-body">
+            <div class="input-row"><input type="text" class="input" id="map-search" placeholder="搜索教学楼、食堂、快递点..."><button class="btn btn-primary" id="map-search-btn">搜索</button></div>
+            <div class="map-categories" id="map-categories"></div>
+          </div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="map"></span><h3>地点列表</h3><select class="input select" id="map-campus" style="width:auto;margin-left:auto"></select></div><div class="card-body"><div class="map-places" id="map-places"></div></div></div>
+        </div>
+      </section>
+
+      <!-- ───── Weather ───── -->
+      <section class="page" id="page-weather">
+        <div class="page-header"><h1>天气</h1><p class="page-desc">校区精准天气与穿衣建议</p></div>
+          <div class="info-banner">基于校区位置的精准天气（数据来自 Open-Meteo 开源 API），包含温度、体感、湿度、风速和 7 日预报。穿衣建议根据温度自动推荐。</div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="sun"></span><h3>当前天气</h3><select class="input select" id="weather-campus" style="width:auto;margin-left:auto"><option value="south">前卫南</option><option value="nanling">南岭</option><option value="chaoyang">朝阳</option><option value="nanhu">南湖</option></select></div><div class="card-body">
+            <div class="weather-current" id="weather-current"><div class="notif-empty">加载中...</div></div>
+          </div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="calendar"></span><h3>7日预报</h3></div><div class="card-body"><div class="weather-forecast" id="weather-forecast"></div></div></div>
+        </div>
+      </section>
+
+      <!-- ───── Notification ───── -->
+      <section class="page" id="page-notification">
+          <div class="info-banner">参考 Reachee 项目，定时抓取吉大 OA 系统（oa.jlu.edu.cn）的通知公告。新通知弹出 Windows 系统通知。支持 VPN 连接和关键词过滤。</div>
+        <div class="page-header"><div class="page-header-row"><div><h1>通知中心</h1><p class="page-desc">JLU OA 通知公告自动推送</p></div><div class="page-header-actions"><button class="btn btn-secondary" id="notif-check"><span class="btn-icon" data-icon="refresh" data-icon-size="14"></span> 立即检查</button><button class="btn btn-primary dev-only" id="notif-test"><span class="btn-icon" data-icon="notification" data-icon-size="14"></span> 测试通知</button></div></div></div>
+        <div class="page-body">
+            <div class="notif-status-bar"><div class="notif-status-left"><span class="badge" id="notif-status-badge">未启用</span><span class="text-muted" id="notif-last-check">上次检查：—</span></div><div class="notif-status-right"><span class="notif-count" id="notif-unread-count">0 条未读</span><span class="notif-count-text" id="notif-total-count" style="display:none"></span></div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="settings"></span><h3>抓取配置</h3></div><div class="card-body">
+            <div class="form-grid">
+              <div class="input-group"><label class="input-label">检查间隔（秒）</label><input type="number" class="input" id="notif-interval" value="300" min="60"></div>
+              <div class="input-group"><label class="input-label">OA 频道 ID</label><input type="number" class="input" id="notif-channel" value="179577"></div>
+              <div class="input-group"><label class="input-label"><input type="checkbox" id="notif-use-vpn" style="margin-right:6px">通过 VPN</label><div id="notif-vpn-fields" style="display:none"><input type="text" class="input" id="notif-vpn-user" placeholder="VPN 账号" style="margin-bottom:6px"><input type="password" class="input" id="notif-vpn-pass" placeholder="VPN 密码"></div></div>
+              <div class="input-group"><label class="input-label">跳过关键词</label><input type="text" class="input" id="notif-skip-keywords" placeholder="聘,任免,招生宣传"></div>
+            </div>
+            <div class="btn-group"><button class="btn btn-primary" id="notif-start"><span class="btn-icon" data-icon="power" data-icon-size="14"></span> 开始监控</button><button class="btn btn-danger" id="notif-stop" disabled><span class="btn-icon" data-icon="close" data-icon-size="14"></span> 停止</button></div>
+          </div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="notification"></span><h3>通知列表</h3></div><div class="card-body"><div class="notif-list" id="notif-list"><div class="notif-empty">暂无通知</div></div></div></div>
+        </div>
+      </section>
+
+      <!-- ───── Pomodoro ───── -->
+      <section class="page" id="page-pomodoro">
+          <div class="info-banner">番茄工作法：专注 25 分钟 → 短休息 5 分钟 → 重复 4 轮后长休息 15 分钟。为待办事项分配番茄，记录每件事花了多少时间。</div>
+        <div class="page-header"><h1>番茄钟</h1><p class="page-desc">专注计时、待办事务与学习统计</p></div>
+        <div class="page-body">
+          <div class="pomo-layout">
+            <!-- Left: Timer -->
+            <div class="pomo-left">
+              <div class="card">
+                <div class="card-body" style="text-align:center;padding:28px 20px">
+                  <div class="pomo-timer" id="pomo-display">25:00</div>
+                  <div class="pomo-type" id="pomo-type">准备开始</div>
+                  <div class="pomo-focus-task" id="pomo-focus-task" style="display:none">
+                    <span class="pomo-focus-label">当前专注 →</span>
+                    <span class="pomo-focus-title" id="pomo-focus-title"></span>
+                  </div>
+                  <div class="btn-group" style="justify-content:center;margin-top:16px">
+                    <button class="btn btn-primary" id="pomo-start">开始专注</button>
+                    <button class="btn btn-secondary" id="pomo-pause" style="display:none">暂停</button>
+                    <button class="btn btn-danger" id="pomo-stop" style="display:none">停止</button>
+                    <button class="btn btn-accent" id="pomo-break">短休息</button>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><span class="card-icon" data-icon="chart"></span><h3>今日统计</h3></div>
+                <div class="card-body">
+                  <div class="pomo-stats">
+                    <div class="gpa-card"><div class="gpa-number" id="pomo-sessions">0</div><div class="gpa-label">完成番茄</div></div>
+                    <div class="gpa-card"><div class="gpa-number" id="pomo-minutes">0</div><div class="gpa-label">专注分钟</div></div>
+                  </div>
+                  <div class="pomo-history" id="pomo-history"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Todo List -->
+            <div class="pomo-right">
+              <div class="card">
+                <div class="card-header">
+                  <span class="card-icon" data-icon="clipboard"></span>
+                  <h3>待办事务</h3>
+                  <span class="badge" id="pomo-todo-count">0 项</span>
+                </div>
+                <div class="card-body">
+                  <div class="todo-add-row">
+                    <input type="text" class="input" id="pomo-todo-input" placeholder="添加待办... (Enter 确认)">
+                    <select class="input select" id="pomo-todo-priority" style="width:auto;min-width:70px">
+                      <option value="normal">普通</option>
+                      <option value="high">重要</option>
+                      <option value="urgent">紧急</option>
+                      <option value="low">低</option>
+                    </select>
+                    <button class="btn btn-primary" id="pomo-todo-add">添加</button>
+                  </div>
+                  <div class="todo-filters">
+                    <button class="todo-filter active" data-filter="active">进行中</button>
+                    <button class="todo-filter" data-filter="all">全部</button>
+                    <button class="todo-filter" data-filter="done">已完成</button>
+                  </div>
+                  <div class="todo-list" id="pomo-todo-list"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───── Calendar Export ───── -->
+      <section class="page" id="page-calendar">
+          <div class="info-banner">将课表和考试安排导出为 .ics 文件，可导入 Google Calendar、Apple Calendar、Outlook 等日历应用，实现课程提醒和考试倒计时。</div>
+        <div class="page-header"><h1>日历导出</h1><p class="page-desc">将课表和考试导出为 .ics 文件，导入系统日历</p></div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="calendar"></span><h3>导出课程表</h3></div><div class="card-body">
+            <p class="text-muted">将当前课表导出为 iCalendar (.ics) 文件，可导入 Google Calendar、Apple Calendar、Outlook 等。</p>
+            <div class="form-grid">
+              <div class="input-group"><label class="input-label">学期开始日期</label><input type="date" class="input" id="cal-semester-start"></div>
+              <div class="input-group"><label class="input-label">周数</label><input type="number" class="input" id="cal-weeks" value="20" min="1" max="30"></div>
+            </div>
+            <div class="btn-group"><button class="btn btn-primary" id="cal-export-courses"><span class="btn-icon" data-icon="export" data-icon-size="14"></span> 导出课程表</button></div>
+          </div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="edit"></span><h3>导出考试安排</h3></div><div class="card-body">
+            <button class="btn btn-primary" id="cal-export-exams"><span class="btn-icon" data-icon="export" data-icon-size="14"></span> 导出考试安排</button>
+          </div></div>
+        </div>
+      </section>
+
+      <!-- ───── PC Toolbox ───── -->
+      <section class="page" id="page-pctoolbox">
+        <div class="page-header"><h1>PC 百宝箱</h1><p class="page-desc">实用 PC 工具集</p></div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="chip"></span><h3>内存优化</h3><span class="badge badge-success">推荐</span></div><div class="card-body">
+            <p class="text-muted">清理系统内存缓存，释放被占用的内存空间。类似 PCL2 的内存优化功能。</p>
+            <div class="pctoolbox-stats" style="display:flex;gap:16px;margin:16px 0;flex-wrap:wrap">
+              <div class="gpa-card"><div class="gpa-number" id="pctoolbox-remaining">—</div><div class="gpa-label">可用内存</div></div>
+              <div class="gpa-card"><div class="gpa-number" id="pctoolbox-freed" style="color:var(--success)">—</div><div class="gpa-label">已释放</div></div>
+            </div>
+            <div class="pctoolbox-result" id="pctoolbox-result" style="display:none;margin-bottom:12px">
+              <div class="result-box">
+                <p>优化前占用：<strong id="pctoolbox-before">—</strong></p>
+                <p>优化后占用：<strong id="pctoolbox-after">—</strong></p>
+                <p>释放了 <strong id="pctoolbox-freed-detail" style="color:var(--success)">—</strong> 内存</p>
+                <p>当前可用：<strong id="pctoolbox-remaining-detail">—</strong></p>
+              </div>
+            </div>
+            <button class="btn btn-primary" id="pctoolbox-optimize">开始优化</button>
+          </div></div>
+        </div>
+      </section>
+
+      <!-- ───── Settings ───── -->
+      <section class="page" id="page-settings">
+          <div class="info-banner">全局设置。开机自启动会在 Windows 登录时自动运行。「启动后最小化到托盘」适合常驻后台接收通知推送。</div>
+        <div class="page-header"><h1>应用设置</h1><p class="page-desc">吉大生活+ 全局设置</p></div>
+        <div class="page-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="power"></span><h3>开机自启动</h3><span class="badge" id="autostart-badge">未启用</span></div><div class="card-body">
+            <div class="setting-row"><div class="setting-info"><span class="setting-title">开机自动启动</span><span class="setting-desc">登录 Windows 后自动运行</span></div><label class="toggle-switch"><input type="checkbox" id="autostart-toggle"><span class="toggle-slider"></span></label></div>
+            <div class="setting-row"><div class="setting-info"><span class="setting-title">启动后最小化到托盘</span><span class="setting-desc">静默后台运行，接收通知推送</span></div><label class="toggle-switch"><input type="checkbox" id="autostart-hidden"><span class="toggle-slider"></span></label></div>
+            <div class="setting-row"><div class="setting-info"><span class="setting-title">启动后自动监控通知</span><span class="setting-desc">应用启动后自动开始抓取 OA 通知</span></div><label class="toggle-switch"><input type="checkbox" id="autostart-notifmonitor"><span class="toggle-slider"></span></label></div>
+          </div></div>
+
+          <!-- Personalization -->
+          <div class="card">
+            <div class="card-header"><span class="card-icon" data-icon="sun"></span><h3>个性化</h3></div>
+            <div class="card-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <span class="setting-title">主题模式</span>
+                  <span class="setting-desc">选择明暗主题，或跟随系统</span>
+                </div>
+                <div class="theme-mode-btns">
+                  <button class="theme-mode-btn active" data-mode="system">系统</button>
+                  <button class="theme-mode-btn" data-mode="light">浅色</button>
+                  <button class="theme-mode-btn" data-mode="dark">深色</button>
+                </div>
+              </div>
+              <div class="setting-row"><div class="setting-info"><span class="setting-title">背景图片</span><span class="setting-desc">选择内置图片或自定义背景</span></div></div>
+              <div class="bg-picker" id="bg-picker"></div>
+              <div class="bg-controls" id="bg-controls" style="display:none">
+                <div class="setting-row">
+                  <div class="setting-info"><span class="setting-title">透明度</span></div>
+                  <input type="range" class="slider" id="bg-opacity" min="0" max="100" value="15">
+                  <span class="slider-val" id="bg-opacity-val">15%</span>
+                </div>
+                <div class="setting-row">
+                  <div class="setting-info"><span class="setting-title">模糊</span></div>
+                  <input type="range" class="slider" id="bg-blur" min="0" max="60" value="20">
+                  <span class="slider-val" id="bg-blur-val">20px</span>
+                </div>
+                <div class="setting-row">
+                  <div class="setting-info"><span class="setting-title">暗化</span></div>
+                  <input type="range" class="slider" id="bg-dim" min="0" max="100" value="40">
+                  <span class="slider-val" id="bg-dim-val">40%</span>
+                </div>
+              </div>
+              <div class="card-controls" id="card-controls" style="margin-top:8px">
+                <div class="setting-row">
+                  <div class="setting-info"><span class="setting-title">浅色卡片透明度</span><span class="setting-desc">浅色主题下卡片透亮程度</span></div>
+                  <input type="range" class="slider" id="card-opacity-light" min="10" max="100" value="65">
+                  <span class="slider-val" id="card-opacity-light-val">65%</span>
+                </div>
+                <div class="setting-row">
+                  <div class="setting-info"><span class="setting-title">深色卡片透明度</span><span class="setting-desc">深色主题下卡片透亮程度</span></div>
+                  <input type="range" class="slider" id="card-opacity-dark" min="10" max="100" value="85">
+                  <span class="slider-val" id="card-opacity-dark-val">85%</span>
+                </div>
+                <div class="setting-row">
+                  <div class="setting-info"><span class="setting-title">卡片模糊</span><span class="setting-desc">卡片背景毛玻璃效果</span></div>
+                  <input type="range" class="slider" id="card-blur" min="0" max="60" value="20">
+                  <span class="slider-val" id="card-blur-val">20px</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Developer Mode -->
+          <div class="card">
+            <div class="card-header"><span class="card-icon" data-icon="code"></span><h3>开发者模式</h3><span class="badge" id="devmode-badge">已关闭</span></div>
+            <div class="card-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <span class="setting-title">启用开发者模式</span>
+                  <span class="setting-desc">显示示例数据和调试功能，仅用于开发测试</span>
+                </div>
+                <label class="toggle-switch"><input type="checkbox" id="devmode-toggle"><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Exit Behavior -->
+          <div class="card">
+            <div class="card-header"><span class="card-icon" data-icon="logOut"></span><h3>退出行为</h3></div>
+            <div class="card-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <span class="setting-title">关闭窗口时</span>
+                  <span class="setting-desc">选择关闭按钮的行为</span>
+                </div>
+                <div class="radio-group" id="exit-behavior-group">
+                  <label class="radio-label"><input type="radio" name="exit-behavior" value="tray" checked> 最小化到托盘</label>
+                  <label class="radio-label"><input type="radio" name="exit-behavior" value="quit"> 彻底退出</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-icon" data-icon="bankCard"></span><h3>账号管理</h3></div>
+            <div class="card-body">
+              <p class="text-muted">统一管理学校各系统的账号密码。保存后其他模块自动使用，无需重复输入。</p>
+              <div class="cred-list" id="cred-list"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-icon" data-icon="star"></span><h3>开源鸣谢</h3></div>
+            <div class="card-body">
+              <p class="text-muted">本项目基于以下开源项目构建，特此致谢：</p>
+              <div class="credits-grid" id="credits-grid"></div>
+            </div>
+          </div>
+
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="info"></span><h3>关于</h3></div><div class="card-body">
+            <div class="info-panel">
+              <div class="info-item"><span class="info-label">应用</span><span class="info-value">吉大生活+ v2.0.0</span></div>
+              <div class="info-item"><span class="info-label">框架</span><span class="info-value">Electron + Win11 Fluent Design</span></div>
+              <div class="info-item"><span class="info-label">平台</span><span class="info-value" id="about-platform">—</span></div>
+            </div>
+            <p class="text-muted" style="margin-top:12px;font-size:12px">
+              TODO：失物招领 · 学费查询 · 水电充值 · AI 课程助手 · 社区模块 · 多校区指南
+            </p>
+          </div></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+  <!-- ─── Notification Detail Modal ───────────────────── -->
+  <div class="modal-overlay" id="notif-detail-modal" style="display:none">
+    <div class="modal" style="width:520px">
+      <div class="modal-header">
+        <span class="modal-icon" data-icon="notification" data-icon-size="20"></span>
+        <h3 id="notif-detail-title">通知详情</h3>
+        <button class="modal-close" id="notif-detail-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="notif-detail-meta" id="notif-detail-meta" style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px"></div>
+        <div class="notif-detail-content" id="notif-detail-content" style="line-height:1.8;font-size:14px;color:var(--text-primary);white-space:pre-wrap;word-break:break-word"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="notif-detail-open" style="display:none">打开原文链接</button>
+        <button class="btn btn-secondary" id="notif-detail-close-btn">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Credential Modal ────────────────────────────── -->
+  <div class="modal-overlay" id="cred-modal" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-icon" data-icon="bankCard" data-icon-size="20"></span>
+        <h3 id="cred-modal-title">配置账号</h3>
+        <button class="modal-close" id="cred-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group">
+          <label class="input-label">用户名 / 学号</label>
+          <input type="text" class="input" id="cred-modal-username" placeholder="输入用户名或学号">
+        </div>
+        <div class="input-group">
+          <label class="input-label">密码</label>
+          <input type="password" class="input" id="cred-modal-password" placeholder="输入密码">
+        </div>
+        <div class="input-group" id="cred-modal-extra-group" style="display:none">
+          <label class="input-label">额外参数</label>
+          <input type="text" class="input" id="cred-modal-extra" placeholder="可选额外参数">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cred-modal-cancel">取消</button>
+        <button class="btn btn-primary" id="cred-modal-save">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="icons.js"></script>
+  <script src="info.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
