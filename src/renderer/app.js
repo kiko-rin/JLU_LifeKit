@@ -2047,109 +2047,473 @@ function osTotalMem() {
 // ═════════════════════════════════════════════════════════════════
 const devcliPage = {
   _ipcList: [],
+  _history: [],
+  _historyIdx: -1,
+  _inactivityTimer: null,
+  _refHideTimer: null,
+  _refInteracting: false,
+
+  // ─── Complete API documentation ─────────────────────────────
+  _apiDocs: {},
 
   init() {
-    $('devcli-exec')?.addEventListener('click', () => devcliPage.exec());
-    $('devcli-clear')?.addEventListener('click', () => {
-      $('devcli-output').textContent = '等待执行...';
-    });
-    $('devcli-input')?.addEventListener('keydown', e => {
-      if (e.key === 'Enter') devcliPage.exec();
-    });
-    $('devcli-filter')?.addEventListener('input', () => devcliPage.renderApiList());
-
-    // Build IPC list from preload API tree
     devcliPage._buildIpcList();
-    devcliPage.renderApiList();
+    devcliPage._buildDocs();
+    devcliPage._setupTerminal();
+    devcliPage._setupRefPanel();
+    devcliPage._setupHint();
+    devcliPage._setupGlobalKeys();
   },
 
+  // ─── Build API tree from window.jlu ─────────────────────────
   _buildIpcList() {
     const apis = [];
-    if (!window.jlu) { apis.push({ channel: '⚠️ window.jlu not available (demo mode)' }); return; }
+    if (!window.jlu) return;
     const walk = (obj, prefix) => {
       for (const key of Object.keys(obj)) {
         const val = obj[key];
         const path = prefix ? prefix + '.' + key : key;
-        if (typeof val === 'function') {
-          apis.push({ channel: path, name: key, fn: val });
-        } else if (typeof val === 'object' && val !== null) {
-          apis.push({ channel: path, name: key, children: true });
-          walk(val, path);
-        }
+        if (typeof val === 'function') apis.push({ channel: path, name: key, fn: val });
+        else if (typeof val === 'object' && val !== null && key !== 'onNavigate' && key !== 'onChanged' && !key.startsWith('on')) { walk(val, path); }
       }
     };
     walk(window.jlu, '');
     this._ipcList = apis;
   },
 
-  renderApiList() {
-    const container = $('devcli-apis');
-    if (!container) return;
-    const filter = ($('devcli-filter')?.value || '').toLowerCase();
-    let list = this._ipcList;
-    if (filter) list = list.filter(a => a.channel.toLowerCase().includes(filter));
-    container.innerHTML = '';
-    if (!list.length) { container.innerHTML = '<div class="notif-empty">无匹配接口</div>'; return; }
-    list.forEach(a => {
-      const el = document.createElement('div');
-      el.className = 'devcli-api-item';
-      el.style.cssText = 'padding:4px 6px;cursor:pointer;border-radius:4px;font-family:monospace;font-size:12px';
-      el.style.hover = 'background:var(--subtle-fill-hover)';
-      el.textContent = a.channel;
-      if (!a.children) {
-        el.addEventListener('click', () => {
-          $('devcli-input').value = a.channel;
-          $('devcli-params').value = '';
-          $('devcli-output').textContent = '点击「执行」调用此接口';
-        });
-      } else {
-        el.style.color = 'var(--text-tertiary)';
-        el.style.fontStyle = 'italic';
+  // ─── Full documentation for ALL IPC endpoints ─────────────
+  _buildDocs() {
+    this._apiDocs = {
+      // Window
+      'window.minimize': { desc: '最小化窗口', example: 'window.minimize', params: [] },
+      'window.maximize': { desc: '切换最大化/还原', example: 'window.maximize', params: [] },
+      'window.close': { desc: '关闭窗口（根据退出行为设置）', example: 'window.close', params: [] },
+      // VPN
+      'vpn.start': { desc: '启动 VPN 代理服务', example: 'vpn.start { port: 8080, mode: "redirect" }', params: ['config: { port: number, mode: "redirect"|"proxy"|"host" }'] },
+      'vpn.stop': { desc: '停止 VPN 代理服务', example: 'vpn.stop', params: [] },
+      'vpn.convert': { desc: '将 URL 转换为 VPN 地址', example: 'vpn.convert "https://www.example.com"', params: ['url: string'] },
+      'vpn.addHost': { desc: '添加 Host 映射域名', example: 'vpn.addHost "example.com"', params: ['domain: string'] },
+      'vpn.removeHost': { desc: '移除 Host 映射域名', example: 'vpn.removeHost "example.com"', params: ['domain: string'] },
+      'vpn.getHosts': { desc: '获取所有 Host 映射', example: 'vpn.getHosts', params: [] },
+      // DrCOM
+      'drcom.login': { desc: 'DrCOM 校园网登录', example: 'drcom.login { server: "10.6.8.1", username: "...", password: "..." }', params: ['config: { server, username, password, mac? }'] },
+      'drcom.logout': { desc: '校园网登出', example: 'drcom.logout', params: [] },
+      'drcom.status': { desc: '获取认证状态', example: 'drcom.status', params: [] },
+      // Schedule
+      'schedule.getAll': { desc: '获取所有课程', example: 'schedule.getAll', params: [] },
+      'schedule.getCurrent': { desc: '获取当前学期', example: 'schedule.getCurrent', params: [] },
+      'schedule.setCurrent': { desc: '设置当前学期', example: 'schedule.setCurrent "2025-1"', params: ['id: string'] },
+      'schedule.create': { desc: '添加课程', example: 'schedule.create { name: "高数", dayOfWeek: 1, startSlot: 1, endSlot: 2 }', params: ['data: object'] },
+      'schedule.update': { desc: '更新课程', example: 'schedule.update "courseId" { name: "新名称" }', params: ['id: string', 'data: object'] },
+      'schedule.delete': { desc: '删除课程', example: 'schedule.delete "courseId"', params: ['id: string'] },
+      'schedule.importFromWeb': { desc: '从教务导入课表', example: 'schedule.importFromWeb { semesterStart: "2025-09-01", courses: [...] }', params: ['data: { semesterStart, courses }'] },
+      // Study
+      'study.getCourses': { desc: '获取学在吉大课程列表', example: 'study.getCourses { username: "...", password: "..." }', params: ['config: { username, password }'] },
+      'study.getVideos': { desc: '获取课程视频列表', example: 'study.getVideos { username: "...", password: "...", courseId: "..." }', params: ['config: { username, password, courseId }'] },
+      'study.download': { desc: '下载视频', example: 'study.download "https://..." "D:/video.mp4"', params: ['url: string', 'savePath: string'] },
+      // CourseGrab
+      'course.start': { desc: '启动自动抢课', example: 'course.start { courseIds: [...], interval: 1000 }', params: ['config: object'] },
+      'course.stop': { desc: '停止抢课', example: 'course.stop', params: [] },
+      // LibSeat
+      'libseat.getSeats': { desc: '查询图书馆可用座位', example: 'libseat.getSeats { floor: "2", date: "2026-09-01", timeSlot: {...} }', params: ['config: { floor?, date, timeSlot }'] },
+      'libseat.reserve': { desc: '预约座位', example: 'libseat.reserve { seat: "62", date: "2026-09-01", startTime: "08:00", endTime: "22:00" }', params: ['config: object'] },
+      'libseat.autoReserve': { desc: '启动自动抢座位', example: 'libseat.autoReserve { seats: ["62","63"], startTime: "08:00", endTime: "22:00" }', params: ['config: object'] },
+      // Notification
+      'notification.start': { desc: '启动 OA 通知监控', example: 'notification.start', params: [] },
+      'notification.stop': { desc: '停止通知监控', example: 'notification.stop', params: [] },
+      'notification.checkNow': { desc: '立即检查新通知', example: 'notification.checkNow', params: [] },
+      'notification.getConfig': { desc: '获取通知爬虫配置', example: 'notification.getConfig', params: [] },
+      'notification.updateConfig': { desc: '更新通知爬虫配置', example: 'notification.updateConfig { interval: 300, channel: 0 }', params: ['config: object'] },
+      'notification.test': { desc: '发送测试 Windows 通知', example: 'notification.test', params: [] },
+      // AutoStart
+      'autostart.getConfig': { desc: '获取开机自启动配置', example: 'autostart.getConfig', params: [] },
+      'autostart.setEnabled': { desc: '设置开机自启动', example: 'autostart.setEnabled true', params: ['enabled: boolean'] },
+      'autostart.setHiddenStart': { desc: '设置启动后隐藏窗口', example: 'autostart.setHiddenStart true', params: ['hidden: boolean'] },
+      // Card
+      'card.getBalance': { desc: '获取校园卡余额', example: 'card.getBalance { cardNumber: "..." }', params: ['config: { cardNumber? }'] },
+      'card.getTransactions': { desc: '获取消费流水', example: 'card.getTransactions { cardNumber: "..." }', params: ['config: { cardNumber? }'] },
+      'card.getDemo': { desc: '获取演示校园卡数据', example: 'card.getDemo', params: [] },
+      // Cafeteria
+      'cafeteria.getList': { desc: '获取食堂列表', example: 'cafeteria.getList', params: [] },
+      'cafeteria.getCrowd': { desc: '获取食堂拥挤度', example: 'cafeteria.getCrowd "cafe1"', params: ['id: string'] },
+      'cafeteria.getMenu': { desc: '获取食堂菜单', example: 'cafeteria.getMenu "cafe1"', params: ['id: string'] },
+      // Bus
+      'bus.getRoutes': { desc: '获取校车路线', example: 'bus.getRoutes', params: [] },
+      'bus.getSchedule': { desc: '获取路线时刻表', example: 'bus.getSchedule "route1"', params: ['routeId: string'] },
+      'bus.getNext': { desc: '获取下一班车信息', example: 'bus.getNext "route1"', params: ['routeId: string'] },
+      // Grade
+      'grade.get': { desc: '获取成绩数据', example: 'grade.get { username: "...", password: "..." }', params: ['config: object'] },
+      'grade.calcGPA': { desc: '计算 GPA', example: 'grade.calcGPA [{ name: "高数", score: 95, credit: 5 }]', params: ['courses: array'] },
+      'grade.getDemo': { desc: '获取演示成绩数据', example: 'grade.getDemo', params: [] },
+      'grade.getDistribution': { desc: '获取成绩分布', example: 'grade.getDistribution [{...}]', params: ['courses: array'] },
+      // Exam
+      'exam.get': { desc: '获取考试安排', example: 'exam.get { semester: "2025-1" }', params: ['config: object'] },
+      'exam.getDemo': { desc: '获取演示考试数据', example: 'exam.getDemo', params: [] },
+      'exam.getCountdowns': { desc: '计算考试倒计时', example: 'exam.getCountdowns [{ date: "2026-01-15", time: "08:00" }]', params: ['exams: array'] },
+      // Grad
+      'grad.getTemplates': { desc: '获取培养方案模板', example: 'grad.getTemplates', params: [] },
+      'grad.analyze': { desc: '分析学分完成进度', example: 'grad.analyze "template1" [...]', params: ['templateId: string', 'courses: array'] },
+      'grad.getDemo': { desc: '获取演示学分数据', example: 'grad.getDemo', params: [] },
+      // Map
+      'map.getCampuses': { desc: '获取校区列表', example: 'map.getCampuses', params: [] },
+      'map.getPlaces': { desc: '获取校区内设施', example: 'map.getPlaces "south"', params: ['campusId: string'] },
+      'map.search': { desc: '搜索设施', example: 'map.search "食堂"', params: ['keyword: string'] },
+      'map.getCategories': { desc: '获取设施分类', example: 'map.getCategories', params: [] },
+      // Classroom
+      'classroom.get': { desc: '查询空教室', example: 'classroom.get { date: "2026-09-01", building: "逸夫楼", startSlot: 1, endSlot: 4 }', params: ['config: { date, building?, startSlot, endSlot }'] },
+      'classroom.getDemo': { desc: '获取演示空教室数据', example: 'classroom.getDemo { building: "逸夫楼" }', params: ['config: object'] },
+      // Delivery
+      'delivery.getPoints': { desc: '获取校内快递点', example: 'delivery.getPoints', params: [] },
+      'delivery.track': { desc: '查询快递物流', example: 'delivery.track { carrier: "yunda", trackingNo: "123456" }', params: ['config: { carrier, trackingNo }'] },
+      'delivery.getCarriers': { desc: '获取支持的快递公司', example: 'delivery.getCarriers', params: [] },
+      // Review
+      'review.search': { desc: '搜索课程评价', example: 'review.search "高等数学"', params: ['keyword: string'] },
+      'review.get': { desc: '获取课程评价详情', example: 'review.get "c1"', params: ['courseId: string'] },
+      'review.add': { desc: '提交课程评价', example: 'review.add { courseId: "c1", rating: 5, content: "很好" }', params: ['review: object'] },
+      // Weather
+      'weather.get': { desc: '获取天气（校区: south/north/chaoyi）', example: 'weather.get "south"', params: ['campus: string'] },
+      // Pomo
+      'pomo.getStatus': { desc: '获取番茄钟状态', example: 'pomo.getStatus', params: [] },
+      'pomo.start': { desc: '开始番茄钟（type: "focus"/"break", todoId 可选）', example: 'pomo.start "focus"', params: ['type: string', 'todoId?: string'] },
+      'pomo.pause': { desc: '暂停番茄钟', example: 'pomo.pause', params: [] },
+      'pomo.resume': { desc: '恢复番茄钟', example: 'pomo.resume', params: [] },
+      'pomo.stop': { desc: '停止番茄钟', example: 'pomo.stop', params: [] },
+      'pomo.updateConfig': { desc: '更新番茄钟配置', example: 'pomo.updateConfig { focusDuration: 25, breakDuration: 5 }', params: ['config: object'] },
+      'pomo.addTodo': { desc: '添加待办事项', example: 'pomo.addTodo { text: "复习高数", estimatedPomodoros: 3 }', params: ['data: object'] },
+      'pomo.updateTodo': { desc: '更新待办', example: 'pomo.updateTodo "todoId" { text: "改需求" }', params: ['id: string', 'updates: object'] },
+      'pomo.deleteTodo': { desc: '删除待办', example: 'pomo.deleteTodo "todoId"', params: ['id: string'] },
+      'pomo.toggleTodo': { desc: '切换待办完成状态', example: 'pomo.toggleTodo "todoId"', params: ['id: string'] },
+      'pomo.reorderTodo': { desc: '重排待办顺序', example: 'pomo.reorderTodo 1 3', params: ['from: number', 'to: number'] },
+      // Share
+      'share.generate': { desc: '生成课表分享图', example: 'share.generate { courses: [...], options: {...} }', params: ['courses: array', 'options: object'] },
+      // Calendar
+      'cal.exportCourses': { desc: '导出课表为 .ics 文件', example: 'cal.exportCourses { courses: [...], semesterStart: "2026-09-01", weeks: 16 }', params: ['config: object'] },
+      'cal.exportExams': { desc: '导出考试安排为 .ics', example: 'cal.exportExams [{ name: "高数", date: "2026-01-15", time: "08:00", location: "..." }]', params: ['exams: array'] },
+      'cal.showInFolder': { desc: '在文件管理器中打开文件所在位置', example: 'cal.showInFolder "C:/path/to/file.ics"', params: ['filePath: string'] },
+      // Edu
+      'edu.login': { desc: '教务系统登录', example: 'edu.login { username: "...", password: "..." }', params: ['config: { username, password }'] },
+      'edu.fetchGrades': { desc: '获取教务成绩', example: 'edu.fetchGrades', params: [] },
+      'edu.fetchSchedule': { desc: '获取教务课表', example: 'edu.fetchSchedule { semester: "2025-1" }', params: ['config: object'] },
+      'edu.fetchExams': { desc: '获取教务考试安排', example: 'edu.fetchExams', params: [] },
+      'edu.checkAvailability': { desc: '检查教务系统可访问性', example: 'edu.checkAvailability', params: [] },
+      // Cred
+      'cred.get': { desc: '获取指定系统凭据', example: 'cred.get "edu"', params: ['system: string'] },
+      'cred.set': { desc: '保存凭据', example: 'cred.set "edu" "2023123456" "mypassword"', params: ['system: string', 'username: string', 'password: string', 'extra?: string'] },
+      'cred.delete': { desc: '删除凭据', example: 'cred.delete "edu"', params: ['system: string'] },
+      'cred.getAll': { desc: '获取所有已保存凭据', example: 'cred.getAll', params: [] },
+      'cred.getSystems': { desc: '获取凭据系统列表', example: 'cred.getSystems', params: [] },
+      'cred.has': { desc: '检查凭据是否存在', example: 'cred.has "edu"', params: ['system: string'] },
+      // Theme
+      'theme.getConfig': { desc: '获取当前主题配置', example: 'theme.getConfig', params: [] },
+      'theme.updateConfig': { desc: '更新主题（mode/background/bgOpacity/bgBlur/bgDim等）', example: 'theme.updateConfig { mode: "dark" }', params: ['patch: object — 支持 mode, background, bgOpacity, bgBlur, bgDim, cardOpacityLight, cardOpacityDark, cardBlur'] },
+      'theme.isDark': { desc: '当前是否为深色模式', example: 'theme.isDark', params: [] },
+      'theme.getBackgrounds': { desc: '获取内置背景列表', example: 'theme.getBackgrounds', params: [] },
+      'theme.getBackgroundDataUrl': { desc: '获取背景 data URL', example: 'theme.getBackgroundDataUrl "bg1"', params: ['bgId: string — bg1~bg7'] },
+      'theme.setMica': { desc: '切换 Windows Mica 毛玻璃效果', example: 'theme.setMica true', params: ['enabled: boolean'] },
+      'theme.pickCustomBg': { desc: '从文件选择器选自定义背景', example: 'theme.pickCustomBg', params: [] },
+      // PC
+      'pc.getMemInfo': { desc: '获取系统内存信息', example: 'pc.getMemInfo', params: [] },
+      'pc.optimizeMemory': { desc: '内存优化（EmptyWorkingSet）', example: 'pc.optimizeMemory', params: [] },
+      // Settings
+      'settings.get': { desc: '读取设置值', example: 'settings.get "devMode"', params: ['key: string'] },
+      'settings.set': { desc: '写入设置值（自动持久化）', example: 'settings.set "devMode" true', params: ['key: string', 'value: any'] },
+      // App
+      'app.getCredits': { desc: '获取开源致谢列表', example: 'app.getCredits', params: [] },
+    };
+    // Auto-fill docs for any missing endpoint
+    devcliPage._autoFillDocs();
+  },
+
+  _autoFillDocs() {
+    const all = this._ipcList;
+    for (const a of all) {
+      if (!this._apiDocs[a.channel]) {
+        // Try to infer description from function name
+        const parts = a.channel.split('.');
+        const name = parts[parts.length - 1];
+        const module = parts.length > 1 ? parts[parts.length - 2] : '';
+        const humanName = name.replace(/([A-Z])/g, ' $1').replace(/^[a-z]/, c => c.toUpperCase());
+        const humanModule = module.replace(/([A-Z])/g, ' $1').replace(/^[a-z]/, c => c.toUpperCase());
+        this._apiDocs[a.channel] = {
+          desc: `${humanModule || '通用'} · ${humanName}`,
+          example: a.channel,
+          params: ['(自动推断，无详细文档)'],
+        };
       }
-      container.appendChild(el);
+    }
+  },
+
+  _getDocs(channel) {
+    const doc = this._apiDocs[channel];
+    if (doc) return doc;
+    // Fallback
+    return { desc: '无详细说明', example: channel, params: [] };
+  },
+
+  // ─── Terminal UI ────────────────────────────────────────────
+  _setupTerminal() {
+    const input = $('devcli-input');
+    if (!input) return;
+
+    input.addEventListener('focus', () => devcliPage._hideHint());
+    input.addEventListener('blur', () => devcliPage._scheduleHint());
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); devcliPage.exec(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); devcliPage._historyBack(); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); devcliPage._historyForward(); }
+      else if (e.key === 'Tab') { e.preventDefault(); devcliPage._openRef(); }
+      devcliPage._hideHint();
+      devcliPage._resetInactivity();
     });
+
+    // Auto-focus terminal when page becomes visible
+    const page = $('page-devcli');
+    if (page) {
+      const observer = new MutationObserver(() => {
+        if (page.classList.contains('active')) setTimeout(() => input.focus(), 100);
+      });
+      observer.observe(page, { attributes: true, attributeFilter: ['class'] });
+      if (page.classList.contains('active')) input.focus();
+    }
+  },
+
+  _historyBack() {
+    if (devcliPage._history.length === 0) return;
+    const idx = devcliPage._historyIdx < 0 ? devcliPage._history.length - 1 : devcliPage._historyIdx - 1;
+    if (idx < 0) return;
+    devcliPage._historyIdx = idx;
+    $('devcli-input').value = devcliPage._history[devcliPage._historyIdx];
+  },
+
+  _historyForward() {
+    if (devcliPage._historyIdx < 0) return;
+    devcliPage._historyIdx++;
+    if (devcliPage._historyIdx >= devcliPage._history.length) {
+      devcliPage._historyIdx = devcliPage._history.length;
+      $('devcli-input').value = '';
+    } else {
+      $('devcli-input').value = devcliPage._history[devcliPage._historyIdx];
+    }
+  },
+
+  _println(text, cls = 'term-result') {
+    const out = $('devcli-output');
+    if (!out) return;
+    const line = document.createElement('div');
+    line.className = 'terminal-line ' + cls;
+    line.innerHTML = text.replace(/\n/g, '<br>').replace(/\t/g, '  ');
+    out.appendChild(line);
+    out.scrollTop = out.scrollHeight;
+  },
+
+  _printPrompt(cmd) {
+    const out = $('devcli-output');
+    if (!out) return;
+    const line = document.createElement('div');
+    line.className = 'terminal-line';
+    line.innerHTML = `<span class="term-prompt">$ </span><span class="term-cmd">${cmd.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`;
+    out.appendChild(line);
+    out.scrollTop = out.scrollHeight;
   },
 
   async exec() {
-    const input = $('devcli-input')?.value.trim();
-    if (!input) { Toast.warn('请输入命令'); return; }
-    const out = $('devcli-output');
-    out.textContent = '执行中...';
+    const input = $('devcli-input');
+    const cmd = input.value.trim();
+    if (!cmd) return;
 
-    // Resolve the function from window.jlu tree by path
-    const parts = input.split('.');
-    let fn = window.jlu;
-    for (const p of parts) {
-      if (!fn || typeof fn !== 'object') {
-        out.textContent = `错误: 路径 ${input} 中的 ${p} 不可访问`;
-        return;
-      }
-      fn = fn[p];
+    devcliPage._history.push(cmd);
+    devcliPage._historyIdx = devcliPage._history.length;
+    input.value = '';
+    devcliPage._printPrompt(cmd);
+
+    // Special commands
+    if (cmd === 'help' || cmd === '?') {
+      devcliPage._println('可用命令:');
+      devcliPage._println(' <b>path.func</b>        调用 IPC 接口，如 <kbd>theme.getConfig</kbd>');
+      devcliPage._println(' <b>path.func arg1 arg2</b>  带参数调用，如 <kbd>theme.setMica true</kbd>');
+      devcliPage._println(' <b>help</b> / <b>?</b>    显示此帮助');
+      devcliPage._println(' <b>clear</b> / <b>cls</b>  清屏');
+      devcliPage._println(' <b>ls</b> / <b>list</b>   列出前 20 个接口');
+      devcliPage._println(' <b>Ctrl+W</b> / <b>Tab</b>  打开 API 参考面板');
+      return;
     }
-    if (typeof fn !== 'function') {
-      out.textContent = `错误: ${input} 不是一个函数（IPC 端点必须是函数）`;
+    if (cmd === 'clear' || cmd === 'cls') {
+      $('devcli-output').innerHTML = '';
+      return;
+    }
+    if (cmd === 'ls' || cmd === 'list') {
+      devcliPage._println('可用 IPC 接口 (' + devcliPage._ipcList.length + ' 个):');
+      devcliPage._ipcList.slice(0, 25).forEach(a => {
+        const doc = devcliPage._getDocs(a.channel);
+        devcliPage._println(' <span style="color:#58a6ff">' + a.channel + '</span> — ' + doc.desc);
+      });
+      if (devcliPage._ipcList.length > 25) devcliPage._println(' ... 还有 ' + (devcliPage._ipcList.length - 25) + ' 个（Ctrl+W 查看全部）');
       return;
     }
 
-    // Parse optional JSON params
-    let params = [];
-    const rawParams = $('devcli-params')?.value.trim();
-    if (rawParams) {
-      try {
-        params = JSON.parse(rawParams);
-        if (!Array.isArray(params)) params = [params];
-      } catch {
-        out.textContent = `错误: 参数 JSON 解析失败\n输入的参数: ${rawParams}`;
-        return;
+    // Parse: "theme.setMica true" => path=theme.setMica, rawArgs="true"
+    const parts = cmd.split(/\s+/);
+    const path = parts[0];
+    const rawArgs = parts.slice(1).join(' ');
+
+    // Support both dot and colon notation
+    const normalized = path.replace(/:/g, '.');
+    const pathParts = normalized.split('.');
+
+    let fn = window.jlu;
+    let resolved = true;
+    for (const p of pathParts) {
+      if (!fn || typeof fn !== 'object') { resolved = false; break; }
+      fn = fn[p];
+    }
+    if (!resolved || typeof fn !== 'function') {
+      devcliPage._println('错误: IPC 接口 <kbd>' + path + '</kbd> 未找到，输入 <kbd>ls</kbd> 查看可用接口', 'term-result');
+      // Show suggestions
+      const similar = devcliPage._ipcList.filter(a => a.channel.includes(pathParts[pathParts.length-1]));
+      if (similar.length) {
+        devcliPage._println('相近接口: ' + similar.map(a => '<kbd>' + a.channel + '</kbd>').join(' '), 'term-result');
       }
+      return;
+    }
+
+    // Parse arguments
+    let args = [];
+    if (rawArgs) {
+      try { args = JSON.parse('[' + rawArgs + ']'); }
+      catch { args = rawArgs.split(/\s+/).filter(Boolean); }
     }
 
     try {
-      const result = await fn(...params);
-      out.textContent = JSON.stringify(result, null, 2);
+      const result = await fn(...args);
+      const formatted = JSON.stringify(result, null, 2);
+      devcliPage._println(formatted, 'term-result');
     } catch (e) {
-      out.textContent = `错误: ${e.message}\n${e.stack || ''}`;
+      devcliPage._println('错误: ' + e.message, 'term-result');
     }
+  },
+
+  // ─── Idle Hint ──────────────────────────────────────────────
+  _setupHint() { devcliPage._resetInactivity(); },
+
+  _resetInactivity() {
+    clearTimeout(devcliPage._inactivityTimer);
+    devcliPage._hideHint();
+    devcliPage._inactivityTimer = setTimeout(() => devcliPage._showHint(), 5000);
+  },
+
+  _showHint() {
+    const hint = $('devcli-hint');
+    const input = $('devcli-input');
+    if (!hint || !input) return;
+    if (document.activeElement === input) return;
+    if (!$('page-devcli')?.classList.contains('active')) return;
+    hint.style.display = '';
+  },
+
+  _hideHint() { const h = $('devcli-hint'); if (h) h.style.display = 'none'; },
+  _scheduleHint() { setTimeout(() => { if (document.activeElement !== $('devcli-input')) devcliPage._showHint(); }, 6000); },
+
+  // ─── Ctrl+W / Tab API Reference Panel ──────────────────────
+  _setupRefPanel() {
+    $('devcli-ref-close')?.addEventListener('click', () => devcliPage._closeRef());
+    $('devcli-ref-filter')?.addEventListener('input', () => devcliPage._renderRef());
+
+    // Don't close on outside click while interacting
+    document.addEventListener('mousedown', (e) => {
+      const ref = $('devcli-ref');
+      if (ref && ref.style.display !== 'none' && !ref.contains(e.target)) {
+        // Only close if not interacting with filter/scroll
+        devcliPage._closeRef();
+      }
+    });
+  },
+
+  _setupGlobalKeys() {
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
+        if ($('page-devcli')?.classList.contains('active')) {
+          e.preventDefault();
+          const ref = $('devcli-ref');
+          if (ref && ref.style.display !== 'none') devcliPage._closeRef();
+          else devcliPage._openRef();
+        }
+      }
+    });
+  },
+
+  _openRef() {
+    const ref = $('devcli-ref');
+    if (!ref) return;
+    ref.style.display = '';
+    $('devcli-ref-filter').value = '';
+    setTimeout(() => $('devcli-ref-filter')?.focus(), 50);
+    devcliPage._renderRef();
+    devcliPage._resetRefAutoHide();
+  },
+
+  _closeRef() {
+    const ref = $('devcli-ref');
+    if (ref) ref.style.display = 'none';
+    clearTimeout(devcliPage._refHideTimer);
+    devcliPage._refInteracting = false;
+    setTimeout(() => $('devcli-input')?.focus(), 50);
+  },
+
+  _resetRefAutoHide() {
+    clearTimeout(devcliPage._refHideTimer);
+    // Don't auto-hide if user is actively interacting
+    if (devcliPage._refInteracting) return;
+    devcliPage._refHideTimer = setTimeout(() => devcliPage._closeRef(), 20000);
+  },
+
+  _renderRef() {
+    const container = $('devcli-ref-body');
+    if (!container) return;
+    const filter = ($('devcli-ref-filter')?.value || '').toLowerCase();
+    let list = devcliPage._ipcList;
+    if (filter) list = list.filter(a => a.channel.toLowerCase().includes(filter));
+    container.innerHTML = '';
+    if (!list.length) {
+      container.innerHTML = '<div class="notif-empty" style="padding:20px;text-align:center;color:#8b949e">无匹配接口</div>';
+      return;
+    }
+    list.forEach(a => {
+      const doc = devcliPage._getDocs(a.channel);
+      const paramsHtml = doc.params && doc.params.length
+        ? '<div style="margin-top:6px;font-size:11px;color:#8b949e">参数: ' + doc.params.join('<br>') + '</div>'
+        : '';
+      const card = document.createElement('div');
+      card.className = 'devcli-ref-card';
+      card.innerHTML = `
+        <div class="devcli-ref-card-path">${a.channel}</div>
+        <div class="devcli-ref-card-desc">${doc.desc}</div>
+        <div class="devcli-ref-card-example" style="display:block">
+          示例: <kbd style="background:rgba(63,185,80,0.15);padding:1px 5px;border-radius:3px;font-size:11px">${doc.example}</kbd>
+          ${paramsHtml}
+        </div>
+      `;
+      // Click → auto-collapse others, show example, then click again → insert to terminal
+      card.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const isExpanded = card.classList.contains('expanded');
+        container.querySelectorAll('.devcli-ref-card.expanded').forEach(c => c.classList.remove('expanded'));
+        if (!isExpanded) {
+          card.classList.add('expanded');
+        } else {
+          // Insert into terminal and close
+          $('devcli-input').value = doc.example;
+          $('devcli-input').focus();
+          devcliPage._closeRef();
+        }
+      });
+
+      // Mouse interaction resets auto-hide
+      card.addEventListener('mouseenter', () => { devcliPage._refInteracting = true; clearTimeout(devcliPage._refHideTimer); });
+      card.addEventListener('mouseleave', () => { devcliPage._refInteracting = false; devcliPage._resetRefAutoHide(); });
+
+      container.appendChild(card);
+    });
   }
 };
 

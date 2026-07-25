@@ -616,29 +616,38 @@
 
       <!-- ───── Dev CLI ───── -->
       <section class="page" id="page-devcli">
-        <div class="page-header"><h1>API CLI</h1><p class="page-desc">开发者命令行 — 直接调用 IPC 接口</p></div>
-        <div class="page-body">
-          <div class="card"><div class="card-header"><span class="card-icon" data-icon="code"></span><h3>IPC 命令执行</h3></div><div class="card-body">
-            <div class="input-row">
-              <input type="text" class="input" id="devcli-input" placeholder="输入命令，如: theme:getConfig 或 cred:getSystems" style="font-family:monospace">
-              <button class="btn btn-primary" id="devcli-exec">执行</button>
-              <button class="btn btn-secondary" id="devcli-clear">清空</button>
-            </div>
-            <div class="input-row" style="margin-top:8px">
-              <input type="text" class="input" id="devcli-params" placeholder="参数 (JSON) 可选，如: {&quot;key&quot;:&quot;devMode&quot;}" style="font-family:monospace;flex:1">
-            </div>
-          </div></div>
-          <div class="card"><div class="card-header"><span class="card-icon" data-icon="refresh"></span><h3>可用 IPC 接口</h3></div><div class="card-body">
-            <div class="devcli-filter">
-              <input type="text" class="input" id="devcli-filter" placeholder="过滤接口..." style="font-family:monospace">
-            </div>
-            <div class="devcli-apis" id="devcli-apis" style="max-height:300px;overflow-y:auto;margin-top:8px"></div>
-          </div></div>
-          <div class="card"><div class="card-header"><span class="card-icon" data-icon="close"></span><h3>执行结果</h3></div><div class="card-body">
-            <pre class="devcli-output" id="devcli-output" style="background:var(--layer);padding:12px;border-radius:var(--radius-md);font-size:12px;line-height:1.6;max-height:400px;overflow:auto;white-space:pre-wrap;word-break:break-all;font-family:monospace">等待执行...</pre>
-          </div></div>
+        <div class="page-header" style="margin-bottom:0;padding:8px 0">
+          <h1 style="font-size:16px;font-family:'JetBrains Mono',monospace">[dev] $ _</h1>
+          <p class="page-desc" style="font-size:11px">开发者命令行 · 输入 IPC 路径调用 · Ctrl+W 查看接口</p>
+        </div>
+        <div class="terminal" id="devcli-terminal">
+          <div class="terminal-output" id="devcli-output">
+            <div class="terminal-line"><span class="term-prompt">$ </span><span class="term-cmd">echo welcome</span></div>
+            <div class="terminal-line term-result">JLU LifeKit Dev CLI v2.0 — 输入 <kbd>help</kbd> 查看帮助，<kbd>Ctrl+W</kbd> 查看 API 列表</div>
+          </div>
+          <div class="terminal-input-line" id="devcli-input-line">
+            <span class="term-prompt">$ </span>
+            <input type="text" class="terminal-input" id="devcli-input" placeholder="输入命令..." spellcheck="false" autofocus>
+            <span class="term-cursor-blink">▊</span>
+          </div>
+          <!-- Idle hint tooltip -->
+          <div class="devcli-hint" id="devcli-hint" style="display:none">按下 <kbd>Ctrl</kbd> + <kbd>W</kbd> 开始思索</div>
         </div>
       </section>
+
+      <!-- ─── API Reference Floating Panel ──────────────────── -->
+      <div class="devcli-ref" id="devcli-ref" style="display:none">
+        <div class="devcli-ref-header">
+          <span style="font-weight:600;font-size:14px">API 参考</span>
+          <div class="devcli-ref-actions">
+            <input type="text" class="devcli-ref-filter" id="devcli-ref-filter" placeholder="过滤 API..." spellcheck="false">
+            <button class="devcli-ref-close" id="devcli-ref-close">✕</button>
+          </div>
+        </div>
+        <div class="devcli-ref-body" id="devcli-ref-body">
+          <div class="notif-empty" style="padding:20px;text-align:center">加载中...</div>
+        </div>
+      </div>
 
       <!-- ───── Settings ───── -->
       <section class="page" id="page-settings">
