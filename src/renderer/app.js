@@ -267,6 +267,10 @@ const ThemeEngine = {
   // ─── Dynamic SVG Filter Generator ───────────────────────────
   _injectLiquidFilter(params) {
     const id = 'liquidGlass';
+    // Remove existing filter if any
+    const existing = document.getElementById(id);
+    if (existing) existing.remove();
+    // Create or reuse SVG container
     let svg = document.getElementById('_liquidFilterSvg');
     if (!svg) {
       svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -274,68 +278,82 @@ const ThemeEngine = {
       svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
       document.body.prepend(svg);
     }
+    ThemeEngine._rebuildFilter(svg, params, id);
+    return id;
+  },
+
+  _rebuildFilter(svg, params, id) {
     const s = params.liquidRefraction ?? 4;
     const b = params.liquidBlur ?? 2;
     const so = params.liquidSpecularOpacity ?? 0.6;
     const ss = params.liquidSpecularSaturation ?? 9;
     const pb = params.liquidProgressiveBlur ?? 5;
-    const ba = params.liquidBgAlpha ?? 0.15;
-    const existingFilter = document.getElementById(id);
-    if (existingFilter) existingFilter.remove();
 
     const xmlns = 'http://www.w3.org/2000/svg';
     const f = document.createElementNS(xmlns, 'filter');
     f.id = id;
-    f.setAttribute('x', '-10%'); f.setAttribute('y', '-10%');
-    f.setAttribute('width', '120%'); f.setAttribute('height', '120%');
+    f.setAttribute('x', '-20%'); f.setAttribute('y', '-20%');
+    f.setAttribute('width', '140%'); f.setAttribute('height', '140%');
+    f.setAttribute('color-interpolation-filters', 'sRGB');
 
-    // feTurbulence
+    // ─── Step 1: Edge mask from SourceAlpha ──────────────────
+    // Blur the alpha channel to create a feather, then invert
+    // so edges get high opacity and center gets 0.
+    const edgeBlur = document.createElementNS(xmlns, 'feGaussianBlur');
+    edgeBlur.setAttribute('in', 'SourceAlpha');
+    edgeBlur.setAttribute('stdDeviation', String(pb || 5));
+    edgeBlur.setAttribute('result', 'edgeBlur');
+    f.appendChild(edgeBlur);
+
+    // feComponentTransfer with tableValues to create edge ring:
+    // tableValues="0 0 1 1" means: inside (alpha=1) → 0, edge → 1
+    const edgeMap = document.createElementNS(xmlns, 'feComponentTransfer');
+    edgeMap.setAttribute('in', 'edgeBlur');
+    edgeMap.setAttribute('result', 'edgeMask');
+    const funcA = document.createElementNS(xmlns, 'feFuncA');
+    funcA.setAttribute('type', 'table');
+    funcA.setAttribute('tableValues', '0 0 0 1');
+    edgeMap.appendChild(funcA);
+    f.appendChild(edgeMap);
+
+    // ─── Step 2: Organic noise ─────────────────────────────
     const turb = document.createElementNS(xmlns, 'feTurbulence');
     turb.setAttribute('type', 'fractalNoise');
-    turb.setAttribute('baseFrequency', '0.015');
-    turb.setAttribute('numOctaves', '2');
+    turb.setAttribute('baseFrequency', '0.02');
+    turb.setAttribute('numOctaves', '3');
     turb.setAttribute('result', 'noise');
-    turb.setAttribute('seed', String(Date.now() % 1000));
     f.appendChild(turb);
 
-    // feDisplacementMap (refraction)
-    if (s > 0) {
-      const disp = document.createElementNS(xmlns, 'feDisplacementMap');
-      disp.setAttribute('in', 'SourceGraphic');
-      disp.setAttribute('in2', 'noise');
-      disp.setAttribute('scale', String(s));
-      disp.setAttribute('xChannelSelector', 'R');
-      disp.setAttribute('yChannelSelector', 'G');
-      disp.setAttribute('result', 'displaced');
-      f.appendChild(disp);
-    }
+    // ─── Step 3: Mask noise → only edges have displacement ──
+    const maskedNoise = document.createElementNS(xmlns, 'feComposite');
+    maskedNoise.setAttribute('in', 'noise');
+    maskedNoise.setAttribute('in2', 'edgeMask');
+    maskedNoise.setAttribute('operator', 'in');
+    maskedNoise.setAttribute('result', 'edgeNoise');
+    f.appendChild(maskedNoise);
 
-    // Progressive blur (edge gradient blur)
-    let blurIn = s > 0 ? 'displaced' : 'SourceGraphic';
-    if (pb > 0) {
-      const blur1 = document.createElementNS(xmlns, 'feGaussianBlur');
-      blur1.setAttribute('in', blurIn);
-      blur1.setAttribute('stdDeviation', String(pb));
-      blur1.setAttribute('result', 'fadeBlur');
-      f.appendChild(blur1);
-      blurIn = 'fadeBlur';
-    }
+    // ─── Step 4: feDisplacementMap — edge-only refraction ──
+    const disp = document.createElementNS(xmlns, 'feDisplacementMap');
+    disp.setAttribute('in', 'SourceGraphic');
+    disp.setAttribute('in2', 'edgeNoise');
+    disp.setAttribute('scale', String(s || 4));
+    disp.setAttribute('xChannelSelector', 'R');
+    disp.setAttribute('yChannelSelector', 'G');
+    disp.setAttribute('result', 'displaced');
+    f.appendChild(disp);
 
-    // Main blur (frosted glass)
-    if (b > 0) {
-      const blur2 = document.createElementNS(xmlns, 'feGaussianBlur');
-      blur2.setAttribute('in', blurIn);
-      blur2.setAttribute('stdDeviation', String(b));
-      blur2.setAttribute('result', 'blurred');
-      f.appendChild(blur2);
-      blurIn = 'blurred';
-    }
+    // ─── Step 5: Frosted glass blur ─────────────────────────
+    const blurElem = document.createElementNS(xmlns, 'feGaussianBlur');
+    blurElem.setAttribute('in', 'displaced');
+    blurElem.setAttribute('stdDeviation', String(b || 2));
+    blurElem.setAttribute('result', 'blurred');
+    f.appendChild(blurElem);
 
-    // feSpecularLighting (glass highlight)
+    // ─── Step 6: Specular highlight on edges ────────────────
     const spec = document.createElementNS(xmlns, 'feSpecularLighting');
-    spec.setAttribute('in', blurIn);
-    spec.setAttribute('specularConstant', String(so));
-    spec.setAttribute('specularExponent', String(Math.max(2, ss)));
+    spec.setAttribute('in', 'edgeMask');
+    spec.setAttribute('specularConstant', String(so || 0.6));
+    spec.setAttribute('specularExponent', String(Math.max(2, ss || 9)));
     spec.setAttribute('lighting-color', '#ffffff');
     spec.setAttribute('result', 'specular');
     const light = document.createElementNS(xmlns, 'fePointLight');
@@ -345,19 +363,18 @@ const ThemeEngine = {
     spec.appendChild(light);
     f.appendChild(spec);
 
-    // Composite: blend specular over blurred content
+    // ─── Step 7: Composite specular over blurred glass ──────
     const comp = document.createElementNS(xmlns, 'feComposite');
     comp.setAttribute('in', 'specular');
-    comp.setAttribute('in2', blurIn);
+    comp.setAttribute('in2', 'blurred');
     comp.setAttribute('operator', 'arithmetic');
     comp.setAttribute('k1', '0');
     comp.setAttribute('k2', '1');
-    comp.setAttribute('k3', String(so * 0.8));
+    comp.setAttribute('k3', String((so || 0.6) * 0.8));
     comp.setAttribute('k4', '0');
     f.appendChild(comp);
 
     svg.appendChild(f);
-    return id;
   },
 
   renderBgPicker() {
