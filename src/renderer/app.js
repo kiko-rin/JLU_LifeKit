@@ -76,30 +76,11 @@ const ThemeEngine = {
     // Add/remove CSS class for Mica mode
     document.body.classList.toggle('mica-mode', !hasBg);
 
-    // ─── Liquid Glass on cards ─────────────────────────────
+    // ─── Liquid Glass via @ybouane/liquidglass (WebGL) ────
     if (liquidOn) {
-      const filterId = ThemeEngine._injectLiquidFilter(this.config);
-      const isDark = root.getAttribute('data-theme') === 'dark';
-      const ba = this.config.liquidBgAlpha ?? 0.15;
-      document.querySelectorAll('.card').forEach(c => {
-        c.classList.add('liquid-glass');
-        c.style.setProperty('background', isDark ? `rgba(255,255,255,${ba * 0.5})` : `rgba(255,255,255,${ba})`);
-        c.style.setProperty('backdrop-filter', `url(#${filterId}) blur(2px) saturate(180%)`);
-        c.style.setProperty('-webkit-backdrop-filter', `url(#${filterId}) blur(2px) saturate(180%)`);
-        c.style.setProperty('border', isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.8)');
-        c.style.setProperty('box-shadow', isDark
-          ? '0 8px 32px rgba(0,0,0,0.3), inset 0 4px 20px rgba(255,255,255,0.1)'
-          : '0 8px 32px rgba(31,38,135,0.2), inset 0 4px 20px rgba(255,255,255,0.3)');
-      });
+      ThemeEngine._enableLiquidGlass(this.config);
     } else {
-      document.querySelectorAll('.card').forEach(c => {
-        c.classList.remove('liquid-glass');
-        c.style.removeProperty('background');
-        c.style.removeProperty('backdrop-filter');
-        c.style.removeProperty('-webkit-backdrop-filter');
-        c.style.removeProperty('border');
-        c.style.removeProperty('box-shadow');
-      });
+      ThemeEngine._disableLiquidGlass();
     }
 
     const bgLayer = document.getElementById('bg-layer');
@@ -246,6 +227,8 @@ const ThemeEngine = {
         const update = {};
         update[p.key] = val;
         ThemeEngine.update(update);
+        // Re-configure LiquidGlass with new param
+        ThemeEngine._updateLiquidConfig(ThemeEngine.config);
         if (valEl) valEl.textContent = p.fmt(val);
       });
     });
@@ -264,131 +247,97 @@ const ThemeEngine = {
     { id: 'bg7', file: 'bg7.png' },
   ],
 
-  // ─── Dynamic SVG Filter Generator ───────────────────────────
-  _injectLiquidFilter(params) {
-    const id = 'liquidGlass';
-    // Remove existing filter if any
-    const existing = document.getElementById(id);
-    if (existing) existing.remove();
-    // Create or reuse SVG container
-    let svg = document.getElementById('_liquidFilterSvg');
-    if (!svg) {
-      svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.id = '_liquidFilterSvg';
-      svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
-      document.body.prepend(svg);
+  // ─── @ybouane/liquidglass WebGL integration ────────────────
+  _liquidInstance: null,
+
+  async _enableLiquidGlass(params) {
+    if (this._liquidInstance) return; // already active
+    try {
+      const { LiquidGlass } = await import(
+        'https://cdn.jsdelivr.net/npm/@ybouane/liquidglass@1.0.0/dist/index.js'
+      );
+      const cards = document.querySelectorAll('.card');
+      if (!cards.length) return;
+
+      // Build config from UI sliders
+      const refraction = (params.liquidRefraction ?? 4) / 20; // 0-20 → 0-1
+      const blurAmount = (params.liquidBlur ?? 2) / 40; // 0-40 → 0-1
+      const specular = params.liquidSpecularOpacity ?? 0.6;
+      const edgeHighlight = specular;
+      const chromAberration = (params.liquidSpecularSaturation ?? 9) / 100; // 0-50 → 0-0.5
+      const ba = params.liquidBgAlpha ?? 0.15;
+      const opacity = Math.max(0.2, Math.min(1, ba * 3));
+
+      const config = {
+        root: document.querySelector('.content'),
+        glassElements: Array.from(cards),
+        defaults: {
+          blurAmount,
+          refraction,
+          chromAberration,
+          edgeHighlight,
+          specular,
+          fresnel: 0.8,
+          distortion: 0.02,
+          cornerRadius: 12,
+          zRadius: 8,
+          opacity,
+          saturation: 0,
+          shadowOpacity: 0.3,
+          shadowSpread: 10,
+          shadowOffsetY: 2,
+          floating: false,
+        },
+      };
+
+      // Apply per-card data-config
+      cards.forEach(c => {
+        c.dataset.config = JSON.stringify({
+          blurAmount,
+          refraction,
+          chromAberration,
+          edgeHighlight,
+          specular,
+          cornerRadius: 12,
+          zRadius: 8,
+          opacity,
+        });
+      });
+
+      this._liquidInstance = await LiquidGlass.init(config);
+      document.querySelectorAll('.card').forEach(c => c.classList.add('liquid-glass-webgl'));
+    } catch (e) {
+      console.error('[LiquidGlass] Init failed:', e);
     }
-    ThemeEngine._rebuildFilter(svg, params, id);
-    return id;
   },
 
-  _rebuildFilter(svg, params, id) {
-    const s = params.liquidRefraction ?? 4;
-    const b = params.liquidBlur ?? 2;
-    const so = params.liquidSpecularOpacity ?? 0.6;
-    const ss = params.liquidSpecularSaturation ?? 9;
-    const pb = params.liquidProgressiveBlur ?? 5;
+  async _disableLiquidGlass() {
+    if (this._liquidInstance) {
+      try { this._liquidInstance.destroy(); } catch {}
+      this._liquidInstance = null;
+    }
+    document.querySelectorAll('.card').forEach(c => {
+      c.classList.remove('liquid-glass-webgl');
+      delete c.dataset.config;
+    });
+  },
 
-    const xmlns = 'http://www.w3.org/2000/svg';
-    const f = document.createElementNS(xmlns, 'filter');
-    f.id = id;
-    f.setAttribute('x', '-20%'); f.setAttribute('y', '-20%');
-    f.setAttribute('width', '140%'); f.setAttribute('height', '140%');
-    f.setAttribute('color-interpolation-filters', 'sRGB');
-
-    // ─── Step 1: Edge mask from SourceAlpha ──────────────────
-    // Blur the alpha channel to create a feather, then invert
-    // so edges get high opacity and center gets 0.
-    const edgeBlur = document.createElementNS(xmlns, 'feGaussianBlur');
-    edgeBlur.setAttribute('in', 'SourceAlpha');
-    edgeBlur.setAttribute('stdDeviation', String(pb || 5));
-    edgeBlur.setAttribute('result', 'edgeBlur');
-    f.appendChild(edgeBlur);
-
-    // feComponentTransfer with tableValues to create edge ring:
-    // tableValues="0 0 1 1" means: inside (alpha=1) → 0, edge → 1
-    const edgeMap = document.createElementNS(xmlns, 'feComponentTransfer');
-    edgeMap.setAttribute('in', 'edgeBlur');
-    edgeMap.setAttribute('result', 'edgeMask');
-    const funcA = document.createElementNS(xmlns, 'feFuncA');
-    funcA.setAttribute('type', 'table');
-    funcA.setAttribute('tableValues', '0 0 0 1');
-    edgeMap.appendChild(funcA);
-    f.appendChild(edgeMap);
-
-    // ─── Step 2: Organic noise ─────────────────────────────
-    const turb = document.createElementNS(xmlns, 'feTurbulence');
-    turb.setAttribute('type', 'fractalNoise');
-    turb.setAttribute('baseFrequency', '0.02');
-    turb.setAttribute('numOctaves', '3');
-    turb.setAttribute('result', 'noise');
-    f.appendChild(turb);
-
-    // ─── Step 3: Mask noise → only edges have displacement ──
-    const maskedNoise = document.createElementNS(xmlns, 'feComposite');
-    maskedNoise.setAttribute('in', 'noise');
-    maskedNoise.setAttribute('in2', 'edgeMask');
-    maskedNoise.setAttribute('operator', 'in');
-    maskedNoise.setAttribute('result', 'edgeNoise');
-    f.appendChild(maskedNoise);
-
-    // ─── Step 4: feDisplacementMap — edge-only refraction ──
-    const disp = document.createElementNS(xmlns, 'feDisplacementMap');
-    disp.setAttribute('in', 'SourceGraphic');
-    disp.setAttribute('in2', 'edgeNoise');
-    disp.setAttribute('scale', String(s || 4));
-    disp.setAttribute('xChannelSelector', 'R');
-    disp.setAttribute('yChannelSelector', 'G');
-    disp.setAttribute('result', 'displaced');
-    f.appendChild(disp);
-
-    // ─── Step 5: Specular saturation on displaced content ───
-    const saturate = document.createElementNS(xmlns, 'feColorMatrix');
-    saturate.setAttribute('in', 'displaced');
-    saturate.setAttribute('type', 'saturate');
-    saturate.setAttribute('values', String(Math.max(0, ss || 9)));
-    saturate.setAttribute('result', 'saturated');
-    f.appendChild(saturate);
-
-    // ─── Step 6: Frosted glass blur ─────────────────────────
-    const blurElem = document.createElementNS(xmlns, 'feGaussianBlur');
-    blurElem.setAttribute('in', 'saturated');
-    blurElem.setAttribute('stdDeviation', String(b || 2));
-    blurElem.setAttribute('result', 'blurred');
-    f.appendChild(blurElem);
-
-    // ─── Step 7: Specular highlight on edges ────────────────
-    const spec = document.createElementNS(xmlns, 'feSpecularLighting');
-    spec.setAttribute('in', 'edgeMask');
-    spec.setAttribute('specularConstant', '0.6');
-    spec.setAttribute('specularExponent', '20');
-    spec.setAttribute('lighting-color', '#ffffff');
-    spec.setAttribute('result', 'specular');
-    const light = document.createElementNS(xmlns, 'fePointLight');
-    light.setAttribute('x', '30%');
-    light.setAttribute('y', '20%');
-    light.setAttribute('z', '200');
-    spec.appendChild(light);
-    f.appendChild(spec);
-
-    // ─── Step 8: Specular alpha fade (specularOpacity via feComponentTransfer) ─
-    const specFade = document.createElementNS(xmlns, 'feComponentTransfer');
-    specFade.setAttribute('in', 'specular');
-    specFade.setAttribute('result', 'specularFaded');
-    const fadeFunc = document.createElementNS(xmlns, 'feFuncA');
-    fadeFunc.setAttribute('type', 'linear');
-    fadeFunc.setAttribute('slope', String(so || 0.6));
-    specFade.appendChild(fadeFunc);
-    f.appendChild(specFade);
-
-    // ─── Step 9: Blend specular over blurred glass ──────────
-    const blend = document.createElementNS(xmlns, 'feBlend');
-    blend.setAttribute('in', 'specularFaded');
-    blend.setAttribute('in2', 'blurred');
-    blend.setAttribute('mode', 'normal');
-    f.appendChild(blend);
-
-    svg.appendChild(f);
+  _updateLiquidConfig(params) {
+    if (!this._liquidInstance) return;
+    const refraction = (params.liquidRefraction ?? 4) / 20;
+    const blurAmount = (params.liquidBlur ?? 2) / 40;
+    const specular = params.liquidSpecularOpacity ?? 0.6;
+    const edgeHighlight = specular;
+    const chromAberration = (params.liquidSpecularSaturation ?? 9) / 100;
+    const ba = params.liquidBgAlpha ?? 0.15;
+    const opacity = Math.max(0.2, Math.min(1, ba * 3));
+    const cfg = {
+      blurAmount, refraction, chromAberration, edgeHighlight, specular,
+      cornerRadius: 12, zRadius: 8, opacity,
+    };
+    document.querySelectorAll('.card').forEach(c => {
+      c.dataset.config = JSON.stringify(cfg);
+    });
   },
 
   renderBgPicker() {

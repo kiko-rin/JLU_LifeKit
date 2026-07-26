@@ -223,59 +223,14 @@
 
 .card:hover { box-shadow: var(--shadow-4); }
 
-/* ─── Liquid Glass — Apple WWDC25 Style (experimental) ─────
-   Dynamic SVG filter via backdrop-filter: url(#liquidGlass)
-   Parameters controlled from settings UI.
-   Based on liunian.js.org/posts/liquid-glass/                  */
+/* ─── Liquid Glass via @ybouane/liquidglass ────────────────
+   WebGL-based refraction, chromatic aberration, specular, Fresnel.
+   Controlled via settings UI sliders mapped to data-config.    */
 
-.liquid-glass-filters {
-  position: absolute;
-  width: 0; height: 0;
-  overflow: hidden;
-}
-
-/* ─── Glass base (static styles, dynamic parts via inline) ──── */
-.card.liquid-glass {
+.card.liquid-glass-webgl {
+  /* Cards get styled by the library's injected canvas */
   position: relative;
-  border-radius: var(--radius-lg);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
-
-.card.liquid-glass:hover {
-  transform: translateY(-1px);
-}
-
-/* ─── Gloss / highlight layer (article ::after technique) ──── */
-.card.liquid-glass::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(255,255,255,0.1);
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: -1;
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(1px);
-  box-shadow:
-    inset -10px -8px 0 -11px rgba(255,255,255,1),
-    inset 0 -9px 0 -8px rgba(255,255,255,1);
-  opacity: 0.6;
-  filter: blur(1px) drop-shadow(10px 4px 6px black) brightness(115%);
-  animation: liquidGloss 6s ease-in-out infinite;
-}
-
-@keyframes liquidGloss {
-  0%, 100% { opacity: 0.5; filter: blur(1px) drop-shadow(10px 4px 6px black) brightness(110%); }
-  50%      { opacity: 0.7; filter: blur(0.5px) drop-shadow(12px 6px 8px black) brightness(125%); }
-}
-
-[data-theme="dark"] .card.liquid-glass::after {
-  opacity: 0.3;
-  filter: blur(1px) drop-shadow(10px 4px 6px black) brightness(100%);
-}
-
-.card.liquid-glass > * { position: relative; z-index: 1; }
 
 /* ─── Liquid Controls ────────────────────────────────────────── */
 .liquid-controls {

@@ -84,6 +84,7 @@
     }
   },
   "dependencies": {
+    "@ybouane/liquidglass": "^1.0.3",
     "iconv-lite": "^0.7.3"
   }
 }
