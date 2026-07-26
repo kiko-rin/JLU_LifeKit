@@ -87,13 +87,18 @@ let themeManager;
 
 let _lastNotifData = null; // stores the last notification for click handling
 
+// ─── Set App User Model ID for Windows notifications ────────
+app.setAppUserModelId('jlu.lifekit');
+
 // ─── Windows Toast Notification ───────────────────────────────
 function sendToast(title, body, tag, notifData) {
   if (!ElectronNotification.isSupported()) return;
   const notif = new ElectronNotification({
     title,
     body: body?.substring(0, 200) || '',
-    icon: path.join(__dirname, '..', '..', 'assets', 'icon.png'),
+    icon: app.isPackaged
+      ? path.join(process.resourcesPath, 'assets', 'icon.png')
+      : path.join(__dirname, '..', '..', 'assets', 'icon.png'),
     silent: false,
     timeoutType: 'default',
     tag: tag || 'jlu-lifekit',
@@ -116,7 +121,9 @@ function sendToast(title, body, tag, notifData) {
 function createTray() {
   if (tray) return;
   try {
-    const iconPath = path.join(__dirname, '..', '..', 'assets', 'icon.png');
+    const iconPath = app.isPackaged
+      ? path.join(process.resourcesPath, 'assets', 'icon.png')
+      : path.join(__dirname, '..', '..', 'assets', 'icon.png');
     const nImage = nativeImage.createFromPath(iconPath);
     // Resize to 16x16 for tray
     const trayImage = nImage.resize({ width: 16, height: 16 });
