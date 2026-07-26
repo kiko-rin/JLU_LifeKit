@@ -64,6 +64,7 @@ const ThemeEngine = {
     root.style.setProperty('--card-blur', cardBlur + 'px');
 
     const hasBg = this.config.background && this.config.background !== 'none';
+    const liquidOn = this.config.liquid === true;
 
     // ─── Toggle Windows Mica vs custom bg layer ──────────────
     // Delay Mica toggle slightly to let content render first (prevents white flash)
@@ -78,30 +79,39 @@ const ThemeEngine = {
     const bgLayer = document.getElementById('bg-layer');
     const bgDim = document.getElementById('bg-dim');
     if (bgLayer) {
-      if (hasBg) {
-        let imageUrl = '';
-        if (!isDemo()) {
-          Log.info('ThemeEngine', '获取背景图', { id: this.config.background });
-          try {
-            const result = await window.jlu.theme.getBackgroundDataUrl(this.config.background);
-            if (result.ok) imageUrl = result.dataUrl;
-          } catch {}
-        }
-        if (!imageUrl) {
-          const base = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-          const bg = ThemeEngine._bgList.find(b => b.id === this.config.background);
-          const file = bg ? bg.file : this.config.background + '.jpg';
-          imageUrl = base + '/backgrounds/' + file;
-        }
-        bgLayer.style.backgroundImage = "url('" + imageUrl + "')";
-        bgLayer.style.backgroundSize = 'cover';
-        bgLayer.style.backgroundPosition = 'center';
-        bgLayer.style.backgroundRepeat = 'no-repeat';
-        bgLayer.style.opacity = this.config.bgOpacity ?? 0.5;
-        bgLayer.style.filter = 'blur(' + (this.config.bgBlur ?? 20) + 'px)';
+      // Liquid effect takes priority
+      if (liquidOn) {
+        bgLayer.classList.add('liquid');
+        bgLayer.style.backgroundImage = '';
+        bgLayer.style.filter = '';
+        bgLayer.style.opacity = '';
       } else {
-        bgLayer.style.backgroundImage = 'none';
-        bgLayer.style.opacity = '0';
+        bgLayer.classList.remove('liquid');
+        if (hasBg) {
+          let imageUrl = '';
+          if (!isDemo()) {
+            Log.info('ThemeEngine', '获取背景图', { id: this.config.background });
+            try {
+              const result = await window.jlu.theme.getBackgroundDataUrl(this.config.background);
+              if (result.ok) imageUrl = result.dataUrl;
+            } catch {}
+          }
+          if (!imageUrl) {
+            const base = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+            const bg = ThemeEngine._bgList.find(b => b.id === this.config.background);
+            const file = bg ? bg.file : this.config.background + '.jpg';
+            imageUrl = base + '/backgrounds/' + file;
+          }
+          bgLayer.style.backgroundImage = "url('" + imageUrl + "')";
+          bgLayer.style.backgroundSize = 'cover';
+          bgLayer.style.backgroundPosition = 'center';
+          bgLayer.style.backgroundRepeat = 'no-repeat';
+          bgLayer.style.opacity = this.config.bgOpacity ?? 0.5;
+          bgLayer.style.filter = 'blur(' + (this.config.bgBlur ?? 20) + 'px)';
+        } else {
+          bgLayer.style.backgroundImage = 'none';
+          bgLayer.style.opacity = '0';
+        }
       }
     }
     if (bgDim && !hasBg) {
@@ -179,6 +189,15 @@ const ThemeEngine = {
       cb.addEventListener('input', () => {
         document.getElementById('card-blur-val').textContent = cb.value + 'px';
         ThemeEngine.update({ cardBlur: parseInt(cb.value) });
+      });
+    }
+    // Liquid toggle
+    const tl = document.getElementById('theme-liquid');
+    if (tl) {
+      tl.checked = this.config.liquid === true;
+      tl.addEventListener('change', () => {
+        ThemeEngine.update({ liquid: tl.checked });
+        Toast.info(tl.checked ? 'Liquid 液态效果已开启（实验性）' : 'Liquid 液态效果已关闭');
       });
     }
     this.updateSettingsUI();

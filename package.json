@@ -34,7 +34,7 @@
   },
   "build": {
     "appId": "com.jlu.lifekit",
-    "productName": "吉大生活+",
+    "productName": "JLU-LifeKit",
     "copyright": "Copyright © 2026 JLU LifeKit Contributors",
     "directories": {
       "output": "dist"
@@ -72,7 +72,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "吉大生活+"
+      "shortcutName": "JLU-LifeKit"
     },
     "mac": {
       "target": "dmg",
