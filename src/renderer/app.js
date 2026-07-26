@@ -251,63 +251,72 @@ const ThemeEngine = {
   _liquidInstance: null,
 
   async _enableLiquidGlass(params) {
-    if (this._liquidInstance) return; // already active
+    if (this._liquidInstance) return;
     try {
+      // Dynamic import from local node_modules
       const { LiquidGlass } = await import(
-        'https://cdn.jsdelivr.net/npm/@ybouane/liquidglass@1.0.0/dist/index.js'
+        /* webpackIgnore: true */ '../../../node_modules/@ybouane/liquidglass/dist/index.js'
       );
-      const cards = document.querySelectorAll('.card');
+      const cards = Array.from(document.querySelectorAll('.card'));
       if (!cards.length) return;
 
-      // Build config from UI sliders
-      const refraction = (params.liquidRefraction ?? 4) / 20; // 0-20 → 0-1
-      const blurAmount = (params.liquidBlur ?? 2) / 40; // 0-40 → 0-1
-      const specular = params.liquidSpecularOpacity ?? 0.6;
-      const edgeHighlight = specular;
-      const chromAberration = (params.liquidSpecularSaturation ?? 9) / 100; // 0-50 → 0-0.5
-      const ba = params.liquidBgAlpha ?? 0.15;
-      const opacity = Math.max(0.2, Math.min(1, ba * 3));
+      // Create a liquid glass root inside .content that wraps visible page's cards
+      const content = document.querySelector('.content');
+      const activePage = document.querySelector('.page.active');
+      if (!activePage) return;
 
-      const config = {
-        root: document.querySelector('.content'),
-        glassElements: Array.from(cards),
-        defaults: {
-          blurAmount,
-          refraction,
-          chromAberration,
-          edgeHighlight,
-          specular,
-          fresnel: 0.8,
-          distortion: 0.02,
-          cornerRadius: 12,
-          zRadius: 8,
-          opacity,
-          saturation: 0,
-          shadowOpacity: 0.3,
-          shadowSpread: 10,
-          shadowOffsetY: 2,
-          floating: false,
-        },
+      // Build root: clone active page's body, make cards direct children
+      const lgRoot = document.createElement('div');
+      lgRoot.id = '_lgRoot';
+      lgRoot.style.cssText = 'position:absolute;inset:0';
+      // Move cards into root, keep other content as siblings
+      const pageBody = activePage.querySelector('.page-body');
+      if (!pageBody) { this._liquidInstance = null; return; }
+
+      // Create root inside content, positioned to match active page
+      content.appendChild(lgRoot);
+      // Take all children of page-body, separate cards from non-cards
+      const children = Array.from(pageBody.children);
+      const nonCards = children.filter(el => !el.classList.contains('card'));
+      const cardEls = children.filter(el => el.classList.contains('card'));
+      // Put non-cards first (background) then cards (glass)
+      nonCards.forEach(el => lgRoot.appendChild(el.cloneNode(true)));
+      lgRoot.append(...cardEls);
+
+      // Store originals to restore later
+      this._lgState = { root: lgRoot, pageBody, cardEls, nonCardHTML: pageBody.innerHTML };
+      // Hide original page body content
+      pageBody.style.display = 'none';
+
+      const ba = params.liquidBgAlpha ?? 0.15;
+      const cfg = {
+        blurAmount: (params.liquidBlur ?? 2) / 40,
+        refraction: (params.liquidRefraction ?? 4) / 20,
+        chromAberration: (params.liquidSpecularSaturation ?? 9) / 100,
+        edgeHighlight: params.liquidSpecularOpacity ?? 0.6,
+        specular: params.liquidSpecularOpacity ?? 0.6,
+        fresnel: 0.8,
+        distortion: (params.liquidProgressiveBlur ?? 5) / 50,
+        cornerRadius: 12,
+        zRadius: 8,
+        opacity: Math.max(0.2, Math.min(1, ba * 3)),
+        shadowOpacity: 0.3,
+        shadowSpread: 10,
+        shadowOffsetY: 2,
+        floating: false,
       };
 
-      // Apply per-card data-config
-      cards.forEach(c => {
-        c.dataset.config = JSON.stringify({
-          blurAmount,
-          refraction,
-          chromAberration,
-          edgeHighlight,
-          specular,
-          cornerRadius: 12,
-          zRadius: 8,
-          opacity,
-        });
+      cardEls.forEach(c => { c.dataset.config = JSON.stringify(cfg); });
+      this._liquidInstance = await LiquidGlass.init({
+        root: lgRoot,
+        glassElements: cardEls,
+        defaults: cfg,
       });
-
-      this._liquidInstance = await LiquidGlass.init(config);
-      document.querySelectorAll('.card').forEach(c => c.classList.add('liquid-glass-webgl'));
+      cardEls.forEach(c => c.classList.add('liquid-glass-webgl'));
     } catch (e) {
-      console.error('[LiquidGlass] Init failed:', e);
+      console.error('[LiquidGlass]', e);
+      // Cleanup on failure
+      this._disableLiquidGlass();
     }
   },
 
@@ -316,24 +325,32 @@ const ThemeEngine = {
       try { this._liquidInstance.destroy(); } catch {}
       this._liquidInstance = null;
     }
+    if (this._lgState) {
+      const { root, pageBody, nonCardHTML } = this._lgState;
+      root.remove();
+      pageBody.style.display = '';
+      pageBody.innerHTML = nonCardHTML;
+      this._lgState = null;
+    }
     document.querySelectorAll('.card').forEach(c => {
       c.classList.remove('liquid-glass-webgl');
       delete c.dataset.config;
     });
+    // Re-init icons since DOM was replaced
+    initIcons();
   },
 
   _updateLiquidConfig(params) {
     if (!this._liquidInstance) return;
-    const refraction = (params.liquidRefraction ?? 4) / 20;
-    const blurAmount = (params.liquidBlur ?? 2) / 40;
-    const specular = params.liquidSpecularOpacity ?? 0.6;
-    const edgeHighlight = specular;
-    const chromAberration = (params.liquidSpecularSaturation ?? 9) / 100;
     const ba = params.liquidBgAlpha ?? 0.15;
-    const opacity = Math.max(0.2, Math.min(1, ba * 3));
     const cfg = {
-      blurAmount, refraction, chromAberration, edgeHighlight, specular,
-      cornerRadius: 12, zRadius: 8, opacity,
+      blurAmount: (params.liquidBlur ?? 2) / 40,
+      refraction: (params.liquidRefraction ?? 4) / 20,
+      chromAberration: (params.liquidSpecularSaturation ?? 9) / 100,
+      edgeHighlight: params.liquidSpecularOpacity ?? 0.6,
+      specular: params.liquidSpecularOpacity ?? 0.6,
+      cornerRadius: 12, zRadius: 8,
+      opacity: Math.max(0.2, Math.min(1, ba * 3)),
     };
     document.querySelectorAll('.card').forEach(c => {
       c.dataset.config = JSON.stringify(cfg);
@@ -405,6 +422,11 @@ const nav = {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const el = document.getElementById(`page-${page}`);
     if (el) { el.classList.add('active'); el.style.animation = 'none'; el.offsetHeight; el.style.animation = ''; }
+    // Re-init liquid glass on page switch if active
+    if (ThemeEngine.config?.liquid) {
+      ThemeEngine._disableLiquidGlass();
+      setTimeout(() => ThemeEngine._enableLiquidGlass(ThemeEngine.config), 50);
+    }
   }
 };
 
