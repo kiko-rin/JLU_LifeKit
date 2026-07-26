@@ -236,9 +236,8 @@ const ThemeEngine = {
       origChildren.filter(el => !el.classList.contains('card')).forEach(el => lgRoot.appendChild(el.cloneNode(true)));
       cardEls.forEach(el => lgRoot.appendChild(el));
       pageBody.style.display = 'none';
-      lgRoot.append(...cardEls);
 
-      this._lgState = { root: lgRoot, pageBody, html: pageBody.innerHTML };
+      this._lgState = { root: lgRoot, pageBody, cards: cardEls };
       cardEls.forEach(c => { c.dataset.config = '{}'; });
       this._liquidInstance = await LiquidGlass.init({ root: lgRoot, glassElements: cardEls });
     } catch (e) {
@@ -250,12 +249,16 @@ const ThemeEngine = {
   _disableLiquidGlass() {
     if (this._liquidInstance) { try { this._liquidInstance.destroy(); } catch {} this._liquidInstance = null; }
     if (this._lgState) {
-      const { root, pageBody, html } = this._lgState;
+      const { root, pageBody, cards } = this._lgState;
+      // Move cards back into page body
+      cards.forEach(c => pageBody.appendChild(c));
+      // Remove cloned non-card elements
+      Array.from(root.children).forEach(el => {
+        if (!cards.includes(el)) el.remove();
+      });
       root.remove();
       pageBody.style.display = '';
-      pageBody.innerHTML = html;
       this._lgState = null;
-      initIcons();
     }
     document.querySelectorAll('.card').forEach(c => {
       c.classList.remove('liquid-glass-webgl');
@@ -331,7 +334,7 @@ const nav = {
     // Re-init liquid glass on page switch if active
     if (ThemeEngine.config?.liquid) {
       ThemeEngine._disableLiquidGlass();
-      setTimeout(() => ThemeEngine._enableLiquidGlass(ThemeEngine.config), 50);
+      setTimeout(() => ThemeEngine._enableLiquidGlass(), 100);
     }
   }
 };
