@@ -224,10 +224,10 @@
 .card:hover { box-shadow: var(--shadow-4); }
 
 /* ─── Liquid Glass — Apple WWDC25 Style (experimental) ─────
-   feTurbulence + feDisplacementMap refraction
-   feSpecularLighting for glass highlights
-   backdrop-filter blur for frosted glass
-   Reference: liunian.js.org/posts/liquid-glass/                   */
+   Strictly based on liunian.js.org/posts/liquid-glass/
+   backdrop-filter: url(#liquidGlass) blur() saturate()
+   → SVG feTurbulence + feDisplacementMap refraction
+   → ::after inset box-shadow gloss highlight                 */
 
 .liquid-glass-filters {
   position: absolute;
@@ -235,84 +235,71 @@
   overflow: hidden;
 }
 
-/* ─── Base glass card ─────────────────────────────────────────── */
+/* ─── Glass base ──────────────────────────────────────────────── */
 .card.liquid-glass {
   position: relative;
-  isolation: isolate;
-  overflow: visible !important;
-  background: rgba(255,255,255,0.10);
-  backdrop-filter: blur(2px) saturate(180%);
-  -webkit-backdrop-filter: blur(2px) saturate(180%);
-  border: 1px solid rgba(255,255,255,0.65);
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: url(#liquidGlass) blur(2px) saturate(180%);
+  -webkit-backdrop-filter: url(#liquidGlass) blur(2px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.8);
+  border-radius: var(--radius-lg);
   box-shadow:
-    0 8px 32px rgba(0,0,0,0.08),
-    inset 0 2px 12px rgba(255,255,255,0.18);
+    0 8px 32px rgba(31,38,135,0.2),
+    inset 0 4px 20px rgba(255,255,255,0.3);
   transition: box-shadow 0.3s ease, background 0.3s ease, transform 0.3s ease;
 }
 
 .card.liquid-glass:hover {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.25);
   box-shadow:
-    0 12px 40px rgba(0,0,0,0.12),
-    inset 0 2px 12px rgba(255,255,255,0.25);
+    0 12px 40px rgba(31,38,135,0.3),
+    inset 0 4px 20px rgba(255,255,255,0.4);
   transform: translateY(-1px);
 }
 
 [data-theme="dark"] .card.liquid-glass {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.2);
   box-shadow:
     0 8px 32px rgba(0,0,0,0.3),
-    inset 0 2px 12px rgba(255,255,255,0.06);
+    inset 0 4px 20px rgba(255,255,255,0.1);
 }
 
 [data-theme="dark"] .card.liquid-glass:hover {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.12);
   box-shadow:
     0 12px 40px rgba(0,0,0,0.4),
-    inset 0 2px 12px rgba(255,255,255,0.10);
+    inset 0 4px 20px rgba(255,255,255,0.15);
 }
 
-/* ─── Refraction + specular highlight layer ──────────────────── */
-.card.liquid-glass::before {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  border-radius: calc(var(--radius-lg) + 8px);
-  pointer-events: none;
-  z-index: -1;
-  /* SVG feTurbulence → feDisplacementMap (edge bulge)
-     + feSpecularLighting (glass reflection)                     */
-  filter: url(#liquidGlass);
-}
-
-/* ─── Glass bezel / edge highlight ───────────────────────────── */
+/* ─── Gloss / highlight layer (per article) ──────────────────── */
 .card.liquid-glass::after {
   content: '';
   position: absolute;
-  inset: -1px;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(255,255,255,0.1);
   border-radius: inherit;
   pointer-events: none;
-  z-index: 0;
-  border: 1.5px solid rgba(255,255,255,0.30);
-  mask: radial-gradient(ellipse 130% 80% at 30% 20%, rgba(255,255,255,0.7) 0%, transparent 70%);
-  -webkit-mask: radial-gradient(ellipse 130% 80% at 30% 20%, rgba(255,255,255,0.7) 0%, transparent 70%);
-  animation: liquidEdgeMove 6s ease-in-out infinite alternate;
+  z-index: -1;
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  box-shadow:
+    inset -10px -8px 0 -11px rgba(255,255,255,1),
+    inset 0 -9px 0 -8px rgba(255,255,255,1);
+  opacity: 0.6;
+  filter: blur(1px) drop-shadow(10px 4px 6px black) brightness(115%);
+  animation: liquidGloss 6s ease-in-out infinite;
 }
 
-@keyframes liquidEdgeMove {
-  0%   { mask: radial-gradient(ellipse 100% 60% at 15% 10%, rgba(255,255,255,0.6) 0%, transparent 65%);
-         -webkit-mask: radial-gradient(ellipse 100% 60% at 15% 10%, rgba(255,255,255,0.6) 0%, transparent 65%); }
-  50%  { mask: radial-gradient(ellipse 130% 80% at 50% 15%, rgba(255,255,255,0.8) 0%, transparent 70%);
-         -webkit-mask: radial-gradient(ellipse 130% 80% at 50% 15%, rgba(255,255,255,0.8) 0%, transparent 70%); }
-  100% { mask: radial-gradient(ellipse 100% 60% at 85% 20%, rgba(255,255,255,0.6) 0%, transparent 65%);
-         -webkit-mask: radial-gradient(ellipse 100% 60% at 85% 20%, rgba(255,255,255,0.6) 0%, transparent 65%); }
+@keyframes liquidGloss {
+  0%, 100% { opacity: 0.5; filter: blur(1px) drop-shadow(10px 4px 6px black) brightness(110%); }
+  50%      { opacity: 0.7; filter: blur(0.5px) drop-shadow(12px 6px 8px black) brightness(125%); }
 }
 
 [data-theme="dark"] .card.liquid-glass::after {
-  border-color: rgba(255,255,255,0.15);
-  mask: radial-gradient(ellipse 130% 80% at 30% 20%, rgba(255,255,255,0.35) 0%, transparent 70%);
-  -webkit-mask: radial-gradient(ellipse 130% 80% at 30% 20%, rgba(255,255,255,0.35) 0%, transparent 70%);
+  opacity: 0.3;
+  filter: blur(1px) drop-shadow(10px 4px 6px black) brightness(100%);
 }
 
 .card.liquid-glass > * { position: relative; z-index: 1; }

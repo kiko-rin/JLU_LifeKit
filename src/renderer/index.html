@@ -15,35 +15,17 @@
   <div id="bg-dim"></div>
 
   <!-- ─── SVG filters for Liquid Glass effect ────────────── -->
+  <!-- Strictly based on liunian.js.org/posts/liquid-glass/       -->
   <svg class="liquid-glass-filters" aria-hidden="true">
     <defs>
-      <!-- Core liquid glass filter: refraction + specular + blur -->
-      <filter id="liquidGlass" x="-20%" y="-20%" width="140%" height="140%">
-        <!-- 1. Turbulence noise for organic liquid distortion -->
-        <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="3" result="noise" seed="1"/>
-        <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1.5 -0.25" in="noise" result="contrastNoise"/>
-        <!-- 2. Edge displacement for refraction (liquid edge bulge) -->
-        <feDisplacementMap in="SourceGraphic" in2="contrastNoise" scale="6" xChannelSelector="R" yChannelSelector="G" result="displaced"/>
-        <!-- 3. Specular highlight (light reflection on glass surface) -->
-        <feSpecularLighting in="displaced" specularConstant="0.8" specularExponent="25" lighting-color="#ffffff" result="specular">
-          <fePointLight x="50%" y="30%" z="150"/>
-        </feSpecularLighting>
-        <!-- 4. Composite specular over displaced content -->
-        <feComposite in="specular" in2="displaced" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="litGlass"/>
-        <!-- 5. Soft blur for frosted glass effect -->
-        <feGaussianBlur in="litGlass" stdDeviation="1.2" result="blurred"/>
-        <!-- 6. Edge glow enhancement -->
-        <feComposite in="blurred" in2="SourceGraphic" operator="in" result="final"/>
-      </filter>
-
-      <!-- Simplified: refraction + specular for performance -->
-      <filter id="liquidGlassSimple" x="-10%" y="-10%" width="120%" height="120%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" result="noise" seed="3"/>
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="displaced"/>
-        <feSpecularLighting in="displaced" specularConstant="0.3" specularExponent="20" lighting-color="#ffffff" result="specular">
+      <filter id="liquidGlass" x="-10%" y="-10%" width="120%" height="120%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="2" result="noise" seed="5"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G" result="displaced"/>
+        <feGaussianBlur in="displaced" stdDeviation="2" result="blurred"/>
+        <feSpecularLighting in="blurred" specularConstant="0.6" specularExponent="20" lighting-color="#ffffff" result="specular">
           <fePointLight x="30%" y="20%" z="200"/>
         </feSpecularLighting>
-        <feComposite in="specular" in2="displaced" operator="arithmetic" k1="0" k2="1" k3="0.3" k4="0"/>
+        <feComposite in="specular" in2="blurred" operator="arithmetic" k1="0" k2="1" k3="0.5" k4="0"/>
       </filter>
     </defs>
   </svg>
