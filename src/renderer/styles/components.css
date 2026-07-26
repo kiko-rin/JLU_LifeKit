@@ -232,23 +232,7 @@
   position: relative;
 }
 
-/* ─── Liquid Controls ────────────────────────────────────────── */
-.liquid-controls {
-  border-top: 1px solid var(--divider);
-  margin-top: 8px;
-}
 
-.liquid-controls .setting-row {
-  padding: 6px 0;
-}
-
-.liquid-controls .setting-title {
-  font-size: 12px;
-}
-
-.liquid-controls .setting-desc {
-  font-size: 10px;
-}
 
 .card-header {
   display: flex;
