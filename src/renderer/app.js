@@ -77,7 +77,28 @@ const ThemeEngine = {
     document.body.classList.toggle('mica-mode', !hasBg);
 
     // ─── Liquid Glass on cards ─────────────────────────────
-    document.querySelectorAll('.card').forEach(c => c.classList.toggle('liquid-glass', liquidOn));
+    document.querySelectorAll('.card').forEach(c => {
+      c.classList.toggle('liquid-glass', liquidOn);
+      if (liquidOn) {
+        // Inject dynamic SVG filter
+        const filterId = ThemeEngine._injectLiquidFilter(this.config);
+        const isDark = root.getAttribute('data-theme') === 'dark';
+        const ba = this.config.liquidBgAlpha ?? 0.15;
+        c.style.setProperty('background', isDark ? `rgba(255,255,255,${ba * 0.5})` : `rgba(255,255,255,${ba})`);
+        c.style.setProperty('backdrop-filter', `url(#${filterId}) blur(2px) saturate(180%)`);
+        c.style.setProperty('-webkit-backdrop-filter', `url(#${filterId}) blur(2px) saturate(180%)`);
+        c.style.setProperty('border', isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.8)');
+        c.style.setProperty('box-shadow', isDark
+          ? '0 8px 32px rgba(0,0,0,0.3), inset 0 4px 20px rgba(255,255,255,0.1)'
+          : '0 8px 32px rgba(31,38,135,0.2), inset 0 4px 20px rgba(255,255,255,0.3)');
+      } else {
+        c.style.removeProperty('background');
+        c.style.removeProperty('backdrop-filter');
+        c.style.removeProperty('-webkit-backdrop-filter');
+        c.style.removeProperty('border');
+        c.style.removeProperty('box-shadow');
+      }
+    });
 
     const bgLayer = document.getElementById('bg-layer');
     const bgDim = document.getElementById('bg-dim');
@@ -185,15 +206,47 @@ const ThemeEngine = {
         ThemeEngine.update({ cardBlur: parseInt(cb.value) });
       });
     }
-    // Liquid glass toggle
+    // Liquid glass toggle + parameter sliders
     const tl = document.getElementById('theme-liquid');
     if (tl) {
       tl.checked = this.config.liquid === true;
+      document.getElementById('liquid-controls').style.display = tl.checked ? '' : 'none';
       tl.addEventListener('change', () => {
+        document.getElementById('liquid-controls').style.display = tl.checked ? '' : 'none';
         ThemeEngine.update({ liquid: tl.checked });
         Toast.info(tl.checked ? 'Liquid Glass 已开启（实验性）' : 'Liquid Glass 已关闭');
       });
     }
+    // Liquid parameter sliders
+    const liquidParams = [
+      { id: 'liquid-specular-opacity', key: 'liquidSpecularOpacity', def: 0.6, fmt: v => Math.round(v*100)+'%' },
+      { id: 'liquid-specular-saturation', key: 'liquidSpecularSaturation', def: 9, fmt: v => Math.round(v).toString() },
+      { id: 'liquid-refraction', key: 'liquidRefraction', def: 4, fmt: v => Math.round(v).toString() },
+      { id: 'liquid-blur', key: 'liquidBlur', def: 2, fmt: v => v.toFixed(1) },
+      { id: 'liquid-progressive-blur', key: 'liquidProgressiveBlur', def: 5, fmt: v => Math.round(v).toString() },
+      { id: 'liquid-bg-alpha', key: 'liquidBgAlpha', def: 0.15, fmt: v => Math.round(v*100)+'%' },
+    ];
+    liquidParams.forEach(p => {
+      const el = document.getElementById(p.id);
+      if (!el) return;
+      const saved = this.config[p.key] ?? p.def;
+      const numVal = saved;
+      el.value = p.key.includes('SpecularOpacity') || p.key === 'liquidBgAlpha' ? Math.round(numVal * 100) : numVal;
+      const valEl = document.getElementById(p.id + '-val');
+      if (valEl) valEl.textContent = p.fmt(numVal);
+      el.addEventListener('input', () => {
+        let val;
+        if (p.key.includes('SpecularOpacity') || p.key === 'liquidBgAlpha') {
+          val = parseInt(el.value) / 100;
+        } else {
+          val = parseFloat(el.value);
+        }
+        const update = {};
+        update[p.key] = val;
+        ThemeEngine.update(update);
+        if (valEl) valEl.textContent = p.fmt(val);
+      });
+    });
     this.updateSettingsUI();
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (ThemeEngine.config.mode === 'system') ThemeEngine.apply(); });
   },
@@ -208,6 +261,102 @@ const ThemeEngine = {
     { id: 'bg6', file: 'bg6.jpeg' },
     { id: 'bg7', file: 'bg7.png' },
   ],
+
+  // ─── Dynamic SVG Filter Generator ───────────────────────────
+  _injectLiquidFilter(params) {
+    const id = 'liquidGlass';
+    let svg = document.getElementById('_liquidFilterSvg');
+    if (!svg) {
+      svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.id = '_liquidFilterSvg';
+      svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+      document.body.prepend(svg);
+    }
+    const s = params.liquidRefraction ?? 4;
+    const b = params.liquidBlur ?? 2;
+    const so = params.liquidSpecularOpacity ?? 0.6;
+    const ss = params.liquidSpecularSaturation ?? 9;
+    const pb = params.liquidProgressiveBlur ?? 5;
+    const ba = params.liquidBgAlpha ?? 0.15;
+    const filter = document.getElementByIdNS('http://www.w3.org/2000/svg', id);
+    if (filter) filter.remove();
+
+    const xmlns = 'http://www.w3.org/2000/svg';
+    const f = document.createElementNS(xmlns, 'filter');
+    f.id = id;
+    f.setAttribute('x', '-10%'); f.setAttribute('y', '-10%');
+    f.setAttribute('width', '120%'); f.setAttribute('height', '120%');
+
+    // feTurbulence
+    const turb = document.createElementNS(xmlns, 'feTurbulence');
+    turb.setAttribute('type', 'fractalNoise');
+    turb.setAttribute('baseFrequency', '0.015');
+    turb.setAttribute('numOctaves', '2');
+    turb.setAttribute('result', 'noise');
+    turb.setAttribute('seed', String(Date.now() % 1000));
+    f.appendChild(turb);
+
+    // feDisplacementMap (refraction)
+    if (s > 0) {
+      const disp = document.createElementNS(xmlns, 'feDisplacementMap');
+      disp.setAttribute('in', 'SourceGraphic');
+      disp.setAttribute('in2', 'noise');
+      disp.setAttribute('scale', String(s));
+      disp.setAttribute('xChannelSelector', 'R');
+      disp.setAttribute('yChannelSelector', 'G');
+      disp.setAttribute('result', 'displaced');
+      f.appendChild(disp);
+    }
+
+    // Progressive blur (edge gradient blur)
+    let blurIn = s > 0 ? 'displaced' : 'SourceGraphic';
+    if (pb > 0) {
+      const blur1 = document.createElementNS(xmlns, 'feGaussianBlur');
+      blur1.setAttribute('in', blurIn);
+      blur1.setAttribute('stdDeviation', String(pb));
+      blur1.setAttribute('result', 'fadeBlur');
+      f.appendChild(blur1);
+      blurIn = 'fadeBlur';
+    }
+
+    // Main blur (frosted glass)
+    if (b > 0) {
+      const blur2 = document.createElementNS(xmlns, 'feGaussianBlur');
+      blur2.setAttribute('in', blurIn);
+      blur2.setAttribute('stdDeviation', String(b));
+      blur2.setAttribute('result', 'blurred');
+      f.appendChild(blur2);
+      blurIn = 'blurred';
+    }
+
+    // feSpecularLighting (glass highlight)
+    const spec = document.createElementNS(xmlns, 'feSpecularLighting');
+    spec.setAttribute('in', blurIn);
+    spec.setAttribute('specularConstant', String(so));
+    spec.setAttribute('specularExponent', String(Math.max(2, ss)));
+    spec.setAttribute('lighting-color', '#ffffff');
+    spec.setAttribute('result', 'specular');
+    const light = document.createElementNS(xmlns, 'fePointLight');
+    light.setAttribute('x', '30%');
+    light.setAttribute('y', '20%');
+    light.setAttribute('z', '200');
+    spec.appendChild(light);
+    f.appendChild(spec);
+
+    // Composite: blend specular over blurred content
+    const comp = document.createElementNS(xmlns, 'feComposite');
+    comp.setAttribute('in', 'specular');
+    comp.setAttribute('in2', blurIn);
+    comp.setAttribute('operator', 'arithmetic');
+    comp.setAttribute('k1', '0');
+    comp.setAttribute('k2', '1');
+    comp.setAttribute('k3', String(so * 0.8));
+    comp.setAttribute('k4', '0');
+    f.appendChild(comp);
+
+    svg.appendChild(f);
+    return id;
+  },
 
   renderBgPicker() {
     const picker = document.getElementById('bg-picker');

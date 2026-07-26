@@ -755,10 +755,42 @@
                 </div>
                 <div class="setting-row">
                   <div class="setting-info">
-                    <span class="setting-title">Liquid 液态效果</span>
-                    <span class="setting-desc">实验性功能 · 卡片表面流动光效</span>
+                    <span class="setting-title">Liquid Glass</span>
+                    <span class="setting-desc">实验性功能 · Apple WWDC25 液态玻璃</span>
                   </div>
                   <label class="toggle-switch"><input type="checkbox" id="theme-liquid"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="liquid-controls" id="liquid-controls" style="display:none;padding-top:8px">
+                  <div class="setting-row">
+                    <div class="setting-info"><span class="setting-title">镜面反射透明度</span><span class="setting-desc">Specular Opacity — 玻璃表面高光强度</span></div>
+                    <input type="range" class="slider" id="liquid-specular-opacity" min="0" max="100" value="60">
+                    <span class="slider-val" id="liquid-specular-opacity-val">60%</span>
+                  </div>
+                  <div class="setting-row">
+                    <div class="setting-info"><span class="setting-title">镜面饱和度</span><span class="setting-desc">Specular Saturation — 高光色散</span></div>
+                    <input type="range" class="slider" id="liquid-specular-saturation" min="0" max="50" value="9">
+                    <span class="slider-val" id="liquid-specular-saturation-val">9</span>
+                  </div>
+                  <div class="setting-row">
+                    <div class="setting-info"><span class="setting-title">折射等级</span><span class="setting-desc">Refraction — 液态边缘扭曲强度</span></div>
+                    <input type="range" class="slider" id="liquid-refraction" min="0" max="20" value="4">
+                    <span class="slider-val" id="liquid-refraction-val">4</span>
+                  </div>
+                  <div class="setting-row">
+                    <div class="setting-info"><span class="setting-title">模糊强度</span><span class="setting-desc">Blur — 磨砂玻璃模糊程度</span></div>
+                    <input type="range" class="slider" id="liquid-blur" min="0" max="40" value="2">
+                    <span class="slider-val" id="liquid-blur-val">2.0</span>
+                  </div>
+                  <div class="setting-row">
+                    <div class="setting-info"><span class="setting-title">渐进模糊强度</span><span class="setting-desc">Progressive Blur — 边缘渐变模糊</span></div>
+                    <input type="range" class="slider" id="liquid-progressive-blur" min="0" max="20" value="5">
+                    <span class="slider-val" id="liquid-progressive-blur-val">5</span>
+                  </div>
+                  <div class="setting-row">
+                    <div class="setting-info"><span class="setting-title">玻璃背景透明度</span><span class="setting-desc">Background Alpha — 玻璃底色透亮程度</span></div>
+                    <input type="range" class="slider" id="liquid-bg-alpha" min="0" max="50" value="15">
+                    <span class="slider-val" id="liquid-bg-alpha-val">15%</span>
+                  </div>
                 </div>
               </div>
             </div>
