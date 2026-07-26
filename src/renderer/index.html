@@ -69,6 +69,11 @@
         <div class="nav-section-title">PC 百宝箱</div>
         <button class="nav-item" data-page="pctoolbox" data-label="PC 百宝箱"><span class="nav-icon" data-icon="chip"></span><span class="nav-label">PC 百宝箱</span></button>
       </div>
+      <div class="nav-section dev-only-section">
+        <div class="nav-section-title">开发者</div>
+        <button class="nav-item" data-page="devcli" data-label="CLI"><span class="nav-icon" data-icon="code"></span><span class="nav-label">API CLI</span></button>
+        <button class="nav-item" data-page="devlog" data-label="LOG"><span class="nav-icon" data-icon="notification"></span><span class="nav-label">LOG</span></button>
+      </div>
       <div class="nav-section">
         <div class="nav-section-title">设置</div>
         <button class="nav-item" data-page="settings" data-label="应用设置"><span class="nav-icon" data-icon="settings"></span><span class="nav-label">应用设置</span></button>
@@ -255,7 +260,7 @@
             </div>
             <p class="text-muted" style="margin-top:8px;font-size:12px">绩点换算标准：吉林大学 4.0 制（校教字〔2016〕102号）· &lt;60→0 · 60-63→1.0 · 64-66→1.3 · 67-69→1.7 · 70-73→2.0 · 74-76→2.3 · 77-79→2.7 · 80-83→3.0 · 84-86→3.3 · 87-89→3.7 · 90-100→4.0</p>
           </div></div>
-          <div class="card"><div class="card-header"><span class="card-icon" data-icon="clipboard"></span><h3>成绩列表</h3><div style="display:flex;gap:8px;margin-left:auto"><button class="btn btn-primary" id="grade-sync-edu"><span class="btn-icon" data-icon="refresh" data-icon-size="14"></span> 同步教务</button><button class="btn btn-secondary dev-only" id="grade-load-demo">演示数据</button></div></div><div class="card-body"><div class="grade-table-wrap"><table class="grade-table" id="grade-table"><thead><tr><th>学期</th><th>课程</th><th>学分</th><th>成绩</th><th>绩点</th></tr></thead><tbody id="grade-tbody"></tbody></table></div></div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="clipboard"></span><h3>成绩列表</h3><div style="display:flex;gap:8px;margin-left:auto"><button class="btn btn-primary" id="grade-sync-edu"><span class="btn-icon" data-icon="refresh" data-icon-size="14"></span> 同步教务</button></div></div><div class="card-body"><div class="grade-table-wrap"><table class="grade-table" id="grade-table"><thead><tr><th>学期</th><th>课程</th><th>学分</th><th>成绩</th><th>绩点</th></tr></thead><tbody id="grade-tbody"></tbody></table></div></div></div>
         </div>
       </section>
 
@@ -264,7 +269,7 @@
         <div class="page-header"><h1>考试安排</h1><p class="page-desc">考试时间、地点、座位号与考前倒计时</p></div>
           <div class="info-banner">同步教务系统的考试安排，显示时间、地点、座位号和考前倒计时。红色标记表示 3 天内开考。</div>
         <div class="page-body">
-          <div class="card"><div class="card-header"><span class="card-icon" data-icon="clock"></span><h3>考试倒计时</h3><button class="btn btn-secondary dev-only" id="exam-load-demo" style="margin-left:auto">加载演示数据</button></div><div class="card-body"><div class="exam-list" id="exam-list"><div class="notif-empty">暂无考试数据</div></div></div></div>
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="clock"></span><h3>考试倒计时</h3></div><div class="card-body"><div class="exam-list" id="exam-list"><div class="notif-empty">暂无考试数据</div></div></div></div>
         </div>
       </section>
 
@@ -273,7 +278,7 @@
         <div class="page-header"><h1>毕业学分追踪</h1><p class="page-desc">培养方案对比，已修/未修学分可视化</p></div>
           <div class="info-banner">对比培养方案显示各类课程的已修/未修学分进度。计科 2022 版要求总学分 170：通识 54 + 数理 28 + 学科基础 30 + 专业核心 20 + 选修 14 + 实践 24。</div>
         <div class="page-body">
-          <div class="card"><div class="card-header"><span class="card-icon" data-icon="target"></span><h3>总进度</h3><button class="btn btn-secondary dev-only" id="grad-load-demo" style="margin-left:auto">加载演示数据</button></div><div class="card-body">
+          <div class="card"><div class="card-header"><span class="card-icon" data-icon="target"></span><h3>总进度</h3></div><div class="card-body">
             <div class="progress-bar-wrap"><div class="progress-bar" id="grad-progress" style="width:0%"></div><span class="progress-text" id="grad-progress-text">0%</span></div>
             <p class="text-muted" id="grad-summary" style="margin-top:8px">—</p>
           </div></div>
@@ -377,7 +382,6 @@
           <div class="card"><div class="card-header"><span class="card-icon" data-icon="bankCard"></span><h3>余额</h3></div><div class="card-body">
             <div class="balance-display"><span class="balance-amount" id="card-balance">—</span><span class="balance-label">元</span></div>
             <p class="text-muted" id="card-id">卡号：—</p>
-            <button class="btn btn-secondary dev-only" id="card-load-demo">加载演示数据</button>
           </div></div>
           <div class="card"><div class="card-header"><span class="card-icon" data-icon="clipboard"></span><h3>消费记录</h3></div><div class="card-body"><div class="txn-list" id="card-transactions"><div class="notif-empty">暂无消费记录</div></div></div></div>
         </div>
@@ -610,6 +614,67 @@
         </div>
       </section>
 
+      <!-- ───── Dev CLI ───── -->
+      <section class="page" id="page-devcli">
+        <div class="page-header" style="margin-bottom:0;padding:8px 0">
+          <h1 style="font-size:16px;font-family:'JetBrains Mono',monospace">[dev] $ _</h1>
+          <p class="page-desc" style="font-size:11px">开发者命令行 · 输入 IPC 路径调用 · Ctrl+W 查看接口</p>
+        </div>
+        <div class="terminal" id="devcli-terminal">
+          <div class="terminal-output" id="devcli-output">
+            <div class="terminal-line"><span class="term-prompt">$ </span><span class="term-cmd">echo welcome</span></div>
+            <div class="terminal-line term-result">JLU LifeKit Dev CLI v2.0 — 输入 <kbd>help</kbd> 查看帮助，<kbd>Ctrl+W</kbd> 查看 API 列表</div>
+          </div>
+          <div class="terminal-input-line" id="devcli-input-line">
+            <span class="term-prompt">$ </span>
+            <input type="text" class="terminal-input" id="devcli-input" placeholder="输入命令..." spellcheck="false" autofocus>
+            <span class="term-cursor-blink">▊</span>
+          </div>
+          <!-- Idle hint tooltip -->
+          <div class="devcli-hint" id="devcli-hint" style="display:none">按下 <kbd>Ctrl</kbd> + <kbd>W</kbd> 开始思索</div>
+        </div>
+      </section>
+
+      <!-- ─── API Reference Floating Panel ──────────────────── -->
+      <div class="devcli-ref" id="devcli-ref" style="display:none">
+        <div class="devcli-ref-header">
+          <span style="font-weight:600;font-size:14px">API 参考</span>
+          <div class="devcli-ref-actions">
+            <input type="text" class="devcli-ref-filter" id="devcli-ref-filter" placeholder="过滤 API..." spellcheck="false">
+            <button class="devcli-ref-close" id="devcli-ref-close">✕</button>
+          </div>
+        </div>
+        <div class="devcli-ref-body" id="devcli-ref-body">
+          <div class="notif-empty" style="padding:20px;text-align:center">加载中...</div>
+        </div>
+      </div>
+
+      <!-- ───── Dev LOG ───── -->
+      <section class="page" id="page-devlog">
+        <div class="page-header" style="margin-bottom:0;padding:8px 0">
+          <h1 style="font-size:16px;font-family:'JetBrains Mono',monospace">[dev] $ tail -f /var/log/app</h1>
+          <p class="page-desc" style="font-size:11px">全量运行日志 · 选中复制 · 分级过滤</p>
+        </div>
+        <div class="devlog-toolbar" style="display:flex;gap:6px;padding:6px 0;flex-wrap:wrap;font-size:11px;flex-shrink:0">
+          <div style="display:flex;gap:2px">
+            <button class="devlog-lvl-btn active" data-level="-1">ALL</button>
+            <button class="devlog-lvl-btn" data-level="0">DEBUG</button>
+            <button class="devlog-lvl-btn" data-level="1">INFO</button>
+            <button class="devlog-lvl-btn" data-level="2">WARN</button>
+            <button class="devlog-lvl-btn" data-level="3">ERROR</button>
+          </div>
+          <input type="text" class="devlog-lvl-btn" id="devlog-filter" placeholder="filter..." spellcheck="false" style="flex:1;max-width:120px;padding:2px 6px;text-align:left;outline:none;font-family:inherit;font-size:11px">
+          <button class="devlog-lvl-btn" id="devlog-copy" title="复制全部" style="cursor:pointer;font-size:11px">⧉</button>
+          <button class="devlog-lvl-btn" id="devlog-clear" title="清空" style="cursor:pointer;font-size:11px">✕</button>
+          <span class="term-prompt" style="font-size:11px;color:#484f58" id="devlog-count">0</span>
+        </div>
+        <div class="terminal" style="min-height:0;flex:1;overflow:hidden">
+          <div class="terminal-output" id="devlog-list" style="margin-bottom:0;user-select:text;-webkit-user-select:text;cursor:text">
+            <div class="terminal-line term-result" style="color:#484f58">[log] 等待操作触发日志 — 在应用各页面操作时自动记录</div>
+          </div>
+        </div>
+      </section>
+
       <!-- ───── Settings ───── -->
       <section class="page" id="page-settings">
           <div class="info-banner">全局设置。开机自启动会在 Windows 登录时自动运行。「启动后最小化到托盘」适合常驻后台接收通知推送。</div>
@@ -619,6 +684,7 @@
             <div class="setting-row"><div class="setting-info"><span class="setting-title">开机自动启动</span><span class="setting-desc">登录 Windows 后自动运行</span></div><label class="toggle-switch"><input type="checkbox" id="autostart-toggle"><span class="toggle-slider"></span></label></div>
             <div class="setting-row"><div class="setting-info"><span class="setting-title">启动后最小化到托盘</span><span class="setting-desc">静默后台运行，接收通知推送</span></div><label class="toggle-switch"><input type="checkbox" id="autostart-hidden"><span class="toggle-slider"></span></label></div>
             <div class="setting-row"><div class="setting-info"><span class="setting-title">启动后自动监控通知</span><span class="setting-desc">应用启动后自动开始抓取 OA 通知</span></div><label class="toggle-switch"><input type="checkbox" id="autostart-notifmonitor"><span class="toggle-slider"></span></label></div>
+            <div class="setting-row"><div class="setting-info"><span class="setting-title">启动时自动登录校园网</span><span class="setting-desc">自动执行 DrCOM 认证（需先保存凭据）</span></div><label class="toggle-switch"><input type="checkbox" id="autostart-drcom"><span class="toggle-slider"></span></label></div>
           </div></div>
 
           <!-- Personalization -->

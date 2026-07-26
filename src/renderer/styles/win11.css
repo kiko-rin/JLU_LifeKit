@@ -250,6 +250,29 @@ code {
 .titlebar-btn.btn-close:hover { background: #c42b1c; color: #fff; }
 .titlebar-btn.btn-close:active { background: #b22214; color: #fff; }
 
+/* ─── Mica Mode (no custom background, use Windows Mica) ──────── */
+body.mica-mode .titlebar {
+  background: transparent;
+  border-bottom-color: transparent;
+}
+
+body.mica-mode .sidebar {
+  background: rgba(255,255,255,0.35);
+  backdrop-filter: blur(var(--acrylic-blur, 40px)) saturate(150%);
+}
+
+body.mica-mode .card {
+  background: rgba(255,255,255,0.25);
+}
+
+[data-theme="dark"] body.mica-mode .sidebar {
+  background: rgba(45,45,45,0.45);
+}
+
+[data-theme="dark"] body.mica-mode .card {
+  background: rgba(45,45,45,0.35);
+}
+
 /* ─── App Container ────────────────────────────────────────── */
 .app-container {
   display: flex;

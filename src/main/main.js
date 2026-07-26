@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage, Notification: ElectronNotification } = require('electron');
 const path = require('path');
+const os = require('os');
 const { startVpnServer, stopVpnServer, convertToVpnUrl, addHost, removeHost, getHosts, setHosts } = require('../modules/vpn-door');
 const { DrcomClient } = require('../modules/drcom');
 const { ScheduleStore } = require('../modules/schedule');
@@ -379,9 +380,6 @@ ipcMain.handle('card:getTransactions', async (_e, config) => {
   try { return { ok: true, transactions: await campusCardClient.getTransactions(config) }; }
   catch (err) { return { ok: false, error: err.message }; }
 });
-ipcMain.handle('card:getDemo', () => {
-  return { ok: true, balance: 342.50, cardId: '2023****1234', status: '正常', transactions: campusCardClient.getDemoTransactions() };
-});
 
 // ─── IPC: Cafeteria ───────────────────────────────────────────────
 ipcMain.handle('cafeteria:getList', () => cafeteriaClient.getCafeterias());
@@ -399,7 +397,6 @@ ipcMain.handle('grade:get', async (_e, config) => {
   catch (err) { return { ok: false, error: err.message }; }
 });
 ipcMain.handle('grade:calcGPA', (_e, courses) => gradeClient.calculateGPA(courses));
-ipcMain.handle('grade:getDemo', () => gradeClient.getDemoGrades());
 ipcMain.handle('grade:getDistribution', (_e, courses) => gradeClient.getDistribution(courses));
 
 // ─── IPC: Exams ──────────────────────────────────────────────────
@@ -407,13 +404,11 @@ ipcMain.handle('exam:get', async (_e, config) => {
   try { return { ok: true, exams: await examClient.getExams(config) }; }
   catch (err) { return { ok: false, error: err.message }; }
 });
-ipcMain.handle('exam:getDemo', () => examClient.getDemoExams());
 ipcMain.handle('exam:getCountdowns', (_e, exams) => examClient.getCountdowns(exams));
 
 // ─── IPC: Graduation ─────────────────────────────────────────────
 ipcMain.handle('grad:getTemplates', () => graduationTracker.getTemplates());
 ipcMain.handle('grad:analyze', (_e, { templateId, courses }) => graduationTracker.analyze(templateId, courses));
-ipcMain.handle('grad:getDemo', () => graduationTracker.getDemoProgress());
 
 // ─── IPC: Campus Map ─────────────────────────────────────────────
 ipcMain.handle('map:getCampuses', () => campusMapClient.getCampuses());
@@ -426,7 +421,6 @@ ipcMain.handle('classroom:get', async (_e, config) => {
   try { return { ok: true, classrooms: await emptyClassroomClient.getClassrooms(config) }; }
   catch (err) { return { ok: false, error: err.message }; }
 });
-ipcMain.handle('classroom:getDemo', (_e, config) => emptyClassroomClient.getDemoClassrooms(config));
 
 // ─── IPC: Delivery ───────────────────────────────────────────────
 ipcMain.handle('delivery:getPoints', () => deliveryClient.getExpressPoints());
@@ -444,7 +438,7 @@ ipcMain.handle('review:add', (_e, review) => { courseReviewClient.addReview(revi
 // ─── IPC: Weather ────────────────────────────────────────────────
 ipcMain.handle('weather:get', async (_e, campus) => {
   try { return { ok: true, ...await weatherClient.getWeather(campus) }; }
-  catch (err) { return { ok: true, ...weatherClient.getDemoWeather(), error: err.message }; }
+  catch (err) { return { ok: false, error: err.message }; }
 });
 
 // ─── IPC: Pomodoro ───────────────────────────────────────────────
@@ -514,6 +508,25 @@ ipcMain.handle('cred:getSystems', () => credManager.getSystems());
 ipcMain.handle('cred:has', (_e, system) => credManager.has(system));
 
 // ─── IPC: Theme & Personalization ────────────────────────────────
+// ─── Windows Mica / Acrylic Background ─────────────────────────
+function isWin11() { return process.platform === 'win32' && parseFloat(os.release()) >= 10.0 && parseFloat(os.release().substring(os.release().lastIndexOf('.') + 1)) >= 22000; }
+
+ipcMain.handle('theme:setMica', async (_e, enabled) => {
+  try {
+    if (mainWindow && typeof mainWindow.setBackgroundMaterial === 'function') {
+      if (enabled && isWin11()) {
+        mainWindow.setBackgroundMaterial('mica');
+        // Remove fixed background color to let Mica show
+        mainWindow.setBackgroundColor('#00000000');
+      } else {
+        mainWindow.setBackgroundMaterial('none');
+        mainWindow.setBackgroundColor('#0f1923');
+      }
+      return { ok: true };
+    }
+    return { ok: false, error: 'Unsupported' };
+  } catch (e) { return { ok: false, error: e.message }; }
+});
 ipcMain.handle('theme:getBackgroundDataUrl', async (_e, bgId) => {
   try {
     const bgFiles = {
@@ -569,6 +582,11 @@ ipcMain.handle('app:getCredits', () => [
   { name: 'Electron', author: 'OpenJS Foundation', url: 'https://www.electronjs.org', desc: '跨平台桌面应用框架', license: 'MIT' },
   { name: 'Node.js', author: 'OpenJS Foundation', url: 'https://nodejs.org', desc: 'JavaScript 运行时', license: 'MIT' },
 ]);
+
+// ─── IPC: Dev Log (main → renderer) ─────────────────────────────
+ipcMain.on('log:info', (_e, { mod, msg, data }) => { if (mainWindow) mainWindow.webContents.send('log:entry', { level: 1, module: mod, message: msg, data, time: new Date() }); });
+ipcMain.on('log:warn', (_e, { mod, msg, data }) => { if (mainWindow) mainWindow.webContents.send('log:entry', { level: 2, module: mod, message: msg, data, time: new Date() }); });
+ipcMain.on('log:error', (_e, { mod, msg, data }) => { if (mainWindow) mainWindow.webContents.send('log:entry', { level: 3, module: mod, message: msg, data, time: new Date() }); });
 
 // ─── IPC: App Settings Store (devMode, exitBehavior, etc.) ───────
 ipcMain.handle('settings:get', (_e, key) => settingsStore.get(key));
@@ -688,6 +706,35 @@ if (!gotTheLock) {
     // If launched with --hidden (auto-start), don't show window
     if (process.argv.includes('--hidden')) {
       mainWindow?.hide();
+    }
+
+    // Auto-start DrCOM login
+    const drcomAutoLogin = settingsStore.get('drcomAutoLogin');
+    if (drcomAutoLogin === true) {
+      (async () => {
+        try {
+          const cred = credManager.get('drcom');
+          if (cred && cred.username && cred.password) {
+            console.log('[AutoLogin] DrCOM 自动登录中...');
+            console.log('[AutoLogin] 用户名:', cred.username);
+            if (!drcomClient) drcomClient = new DrcomClient();
+            const result = await drcomClient.login({
+              server: cred.server || '10.10.10.10',
+              username: cred.username,
+              password: cred.password,
+              mac: cred.mac || '',
+            });
+            if (result && result.info) {
+              console.log('[AutoLogin] DrCOM 登录成功:', result.info.username);
+              sendToast('校园网自动登录', `已自动登录 ${result.info.username}`, 'jlu-drcom-auto');
+            }
+          } else {
+            console.warn('[AutoLogin] DrCOM 自动登录跳过：未保存凭据');
+          }
+        } catch (e) {
+          console.error('[AutoLogin] DrCOM 自动登录失败:', e.message);
+        }
+      })();
     }
 
     // Auto-start notification crawler if it was enabled (legacy) or notifMonitor setting is on

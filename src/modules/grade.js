@@ -119,23 +119,6 @@ class GradeClient {
     return ranges;
   }
 
-  /** Demo data with official JLU grade letters */
-  getDemoGrades() {
-    return [
-      { semester: '2025-2026-1', name: '数学分析I', credit: 5, score: 92, grade: 'A' },
-      { semester: '2025-2026-1', name: '大学物理I', credit: 3, score: 87, grade: 'A-' },
-      { semester: '2025-2026-1', name: '程序设计基础', credit: 3, score: 96, grade: 'A+' },
-      { semester: '2025-2026-1', name: '高等代数I', credit: 4, score: 78, grade: 'B-' },
-      { semester: '2025-2026-1', name: '大学外语I', credit: 2, score: 85, grade: 'B+' },
-      { semester: '2025-2026-1', name: '体育I', credit: 1, score: 90, grade: 'A' },
-      { semester: '2025-2026-1', name: '思想道德与法治', credit: 3, score: 82, grade: 'B' },
-      { semester: '2024-2025-2', name: '概率论与数理统计', credit: 4, score: 73, grade: 'C' },
-      { semester: '2024-2025-2', name: '离散数学', credit: 4, score: 88, grade: 'A-' },
-      { semester: '2024-2025-2', name: '数据结构', credit: 4, score: 91, grade: 'A' },
-      { semester: '2024-2025-2', name: '数字逻辑电路', credit: 3, score: 76, grade: 'C+' },
-      { semester: '2024-2025-2', name: '大学外语II', credit: 2, score: 84, grade: 'B+' },
-    ];
-  }
 }
 
 module.exports = { GradeClient };

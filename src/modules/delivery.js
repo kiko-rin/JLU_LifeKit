@@ -19,19 +19,7 @@ class DeliveryClient {
 
   async track({ carrier, trackingNo }) {
     // In real implementation, call tracking API (kuaidi100 etc.)
-    // Demo:
-    return {
-      carrier,
-      trackingNo,
-      status: '已签收',
-      timeline: [
-        { time: '2026-07-25 09:30', desc: '已签收，签收人：菜鸟驿站代收' },
-        { time: '2026-07-25 06:15', desc: '派件中，快递员：张师傅 138****1234' },
-        { time: '2026-07-24 22:00', desc: '到达长春转运中心' },
-        { time: '2026-07-23 18:00', desc: '已发出，上海转运中心' },
-        { time: '2026-07-23 14:00', desc: '已揽收，上海浦东营业部' },
-      ],
-    };
+    return { carrier, trackingNo, status: '查询中', timeline: [] };
   }
 
   getCarrierList() {

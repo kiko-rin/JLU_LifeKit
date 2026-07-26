@@ -62,21 +62,6 @@ class CampusCardClient {
     }
   }
 
-  /** Generate demo data for UI testing */
-  getDemoTransactions() {
-    const locs = ['前卫南一食堂', '前卫南二食堂', '莘子园', '超市', '打印店', '开水房', '浴室'];
-    const now = Date.now();
-    return Array.from({ length: 20 }, (_, i) => {
-      const amount = -(Math.random() * 30 + 2).toFixed(2);
-      return {
-        time: new Date(now - i * 3600000 * (Math.random() * 4 + 1)).toLocaleString('zh-CN'),
-        location: locs[Math.floor(Math.random() * locs.length)],
-        amount: parseFloat(amount),
-        balance: (500 + i * parseFloat(amount)).toFixed(2),
-        type: parseFloat(amount) < 0 ? '消费' : '充值',
-      };
-    });
-  }
 }
 
 module.exports = { CampusCardClient };

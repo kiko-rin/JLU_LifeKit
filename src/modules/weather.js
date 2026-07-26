@@ -92,18 +92,6 @@ class WeatherClient {
     return advice;
   }
 
-  /** Demo fallback */
-  getDemoWeather() {
-    return {
-      campus: '前卫南',
-      current: { temp: 26, feelsLike: 28, humidity: 65, windSpeed: 12, code: 2, desc: '局部多云' },
-      forecast: Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(); d.setDate(d.getDate() + i);
-        return { date: d.toISOString().split('T')[0], max: 28 + Math.random() * 4, min: 18 + Math.random() * 3, code: [0, 1, 2, 61][i % 4], desc: ['晴', '大部晴朗', '局部多云', '小雨'][i % 4], rainChance: [0, 10, 20, 60][i % 4] };
-      }),
-      advice: '🌤️ 微凉，建议穿长袖/薄外套',
-    };
-  }
 }
 
 module.exports = { WeatherClient };

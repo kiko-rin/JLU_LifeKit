@@ -87,7 +87,6 @@ contextBridge.exposeInMainWorld('jlu', {
   card: {
     getBalance: (config) => ipcRenderer.invoke('card:getBalance', config),
     getTransactions: (config) => ipcRenderer.invoke('card:getTransactions', config),
-    getDemo: () => ipcRenderer.invoke('card:getDemo'),
   },
 
   // Cafeteria
@@ -108,14 +107,12 @@ contextBridge.exposeInMainWorld('jlu', {
   grade: {
     get: (config) => ipcRenderer.invoke('grade:get', config),
     calcGPA: (courses) => ipcRenderer.invoke('grade:calcGPA', courses),
-    getDemo: () => ipcRenderer.invoke('grade:getDemo'),
     getDistribution: (courses) => ipcRenderer.invoke('grade:getDistribution', courses),
   },
 
   // Exams
   exam: {
     get: (config) => ipcRenderer.invoke('exam:get', config),
-    getDemo: () => ipcRenderer.invoke('exam:getDemo'),
     getCountdowns: (exams) => ipcRenderer.invoke('exam:getCountdowns', exams),
   },
 
@@ -123,7 +120,6 @@ contextBridge.exposeInMainWorld('jlu', {
   grad: {
     getTemplates: () => ipcRenderer.invoke('grad:getTemplates'),
     analyze: (templateId, courses) => ipcRenderer.invoke('grad:analyze', { templateId, courses }),
-    getDemo: () => ipcRenderer.invoke('grad:getDemo'),
   },
 
   // Campus Map
@@ -137,7 +133,6 @@ contextBridge.exposeInMainWorld('jlu', {
   // Empty Classroom
   classroom: {
     get: (config) => ipcRenderer.invoke('classroom:get', config),
-    getDemo: (config) => ipcRenderer.invoke('classroom:getDemo', config),
   },
 
   // Delivery
@@ -209,6 +204,7 @@ contextBridge.exposeInMainWorld('jlu', {
   theme: {
     getConfig: () => ipcRenderer.invoke('theme:getConfig'),
     getBackgroundDataUrl: (bgId) => ipcRenderer.invoke('theme:getBackgroundDataUrl', bgId),
+    setMica: (enabled) => ipcRenderer.invoke('theme:setMica', enabled),
     updateConfig: (patch) => ipcRenderer.invoke('theme:updateConfig', patch),
     isDark: () => ipcRenderer.invoke('theme:isDark'),
     getBackgrounds: () => ipcRenderer.invoke('theme:getBackgrounds'),
@@ -224,6 +220,18 @@ contextBridge.exposeInMainWorld('jlu', {
   pc: {
     getMemInfo: () => ipcRenderer.invoke('pc:getMemInfo'),
     optimizeMemory: () => ipcRenderer.invoke('pc:optimizeMemory'),
+  },
+
+  // Dev Log (main process → renderer)
+  log: {
+    info: (mod, msg, data) => ipcRenderer.send('log:info', { mod, msg, data }),
+    warn: (mod, msg, data) => ipcRenderer.send('log:warn', { mod, msg, data }),
+    error: (mod, msg, data) => ipcRenderer.send('log:error', { mod, msg, data }),
+    onLog: (callback) => {
+      const handler = (_event, entry) => callback(entry);
+      ipcRenderer.on('log:entry', handler);
+      return () => ipcRenderer.removeListener('log:entry', handler);
+    },
   },
 
   // App-wide Settings Store
