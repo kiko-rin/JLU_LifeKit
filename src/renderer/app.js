@@ -342,18 +342,26 @@ const ThemeEngine = {
     disp.setAttribute('result', 'displaced');
     f.appendChild(disp);
 
-    // ─── Step 5: Frosted glass blur ─────────────────────────
+    // ─── Step 5: Specular saturation on displaced content ───
+    const saturate = document.createElementNS(xmlns, 'feColorMatrix');
+    saturate.setAttribute('in', 'displaced');
+    saturate.setAttribute('type', 'saturate');
+    saturate.setAttribute('values', String(Math.max(0, ss || 9)));
+    saturate.setAttribute('result', 'saturated');
+    f.appendChild(saturate);
+
+    // ─── Step 6: Frosted glass blur ─────────────────────────
     const blurElem = document.createElementNS(xmlns, 'feGaussianBlur');
-    blurElem.setAttribute('in', 'displaced');
+    blurElem.setAttribute('in', 'saturated');
     blurElem.setAttribute('stdDeviation', String(b || 2));
     blurElem.setAttribute('result', 'blurred');
     f.appendChild(blurElem);
 
-    // ─── Step 6: Specular highlight on edges ────────────────
+    // ─── Step 7: Specular highlight on edges ────────────────
     const spec = document.createElementNS(xmlns, 'feSpecularLighting');
     spec.setAttribute('in', 'edgeMask');
-    spec.setAttribute('specularConstant', String(so || 0.6));
-    spec.setAttribute('specularExponent', String(Math.max(2, ss || 9)));
+    spec.setAttribute('specularConstant', '0.6');
+    spec.setAttribute('specularExponent', '20');
     spec.setAttribute('lighting-color', '#ffffff');
     spec.setAttribute('result', 'specular');
     const light = document.createElementNS(xmlns, 'fePointLight');
@@ -363,16 +371,22 @@ const ThemeEngine = {
     spec.appendChild(light);
     f.appendChild(spec);
 
-    // ─── Step 7: Composite specular over blurred glass ──────
-    const comp = document.createElementNS(xmlns, 'feComposite');
-    comp.setAttribute('in', 'specular');
-    comp.setAttribute('in2', 'blurred');
-    comp.setAttribute('operator', 'arithmetic');
-    comp.setAttribute('k1', '0');
-    comp.setAttribute('k2', '1');
-    comp.setAttribute('k3', String((so || 0.6) * 0.8));
-    comp.setAttribute('k4', '0');
-    f.appendChild(comp);
+    // ─── Step 8: Specular alpha fade (specularOpacity via feComponentTransfer) ─
+    const specFade = document.createElementNS(xmlns, 'feComponentTransfer');
+    specFade.setAttribute('in', 'specular');
+    specFade.setAttribute('result', 'specularFaded');
+    const fadeFunc = document.createElementNS(xmlns, 'feFuncA');
+    fadeFunc.setAttribute('type', 'linear');
+    fadeFunc.setAttribute('slope', String(so || 0.6));
+    specFade.appendChild(fadeFunc);
+    f.appendChild(specFade);
+
+    // ─── Step 9: Blend specular over blurred glass ──────────
+    const blend = document.createElementNS(xmlns, 'feBlend');
+    blend.setAttribute('in', 'specularFaded');
+    blend.setAttribute('in2', 'blurred');
+    blend.setAttribute('mode', 'normal');
+    f.appendChild(blend);
 
     svg.appendChild(f);
   },
