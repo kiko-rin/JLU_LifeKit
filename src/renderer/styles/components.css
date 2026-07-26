@@ -215,10 +215,45 @@
   box-shadow: var(--shadow-2);
   margin-bottom: 16px;
   overflow: hidden;
+  position: relative;
   transition: box-shadow var(--dur-200) var(--ease-std);
 }
 
 .card:hover { box-shadow: var(--shadow-4); }
+
+/* ─── Liquid Glass (experimental) ────────────────────────── */
+@keyframes liquidGlassFlow {
+  0%   { background-position: 0% 50%, 50% 50%, 100% 50%; }
+  33%  { background-position: 50% 0%, 100% 50%, 0% 100%; }
+  66%  { background-position: 100% 50%, 0% 100%, 50% 0%; }
+  100% { background-position: 0% 50%, 50% 50%, 100% 50%; }
+}
+
+.card.liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 100% 80% at 10% 30%, rgba(88,166,255,0.20) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 60% at 90% 20%, rgba(210,153,34,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 70% 80% at 50% 90%, rgba(248,81,73,0.12) 0%, transparent 55%);
+  background-size: 300% 300%, 300% 300%, 300% 300%;
+  animation: liquidGlassFlow 10s ease-in-out infinite;
+  mix-blend-mode: overlay;
+}
+
+.card.liquid-glass > * { position: relative; z-index: 1; }
+
+[data-theme="dark"] .card.liquid-glass::before {
+  background:
+    radial-gradient(ellipse 100% 80% at 10% 30%, rgba(88,166,255,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 60% at 90% 20%, rgba(210,153,34,0.10) 0%, transparent 50%),
+    radial-gradient(ellipse 70% 80% at 50% 90%, rgba(248,81,73,0.08) 0%, transparent 55%);
+  mix-blend-mode: screen;
+}
 
 .card-header {
   display: flex;

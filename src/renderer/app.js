@@ -76,42 +76,36 @@ const ThemeEngine = {
     // Add/remove CSS class for Mica mode
     document.body.classList.toggle('mica-mode', !hasBg);
 
+    // ─── Liquid Glass on cards ─────────────────────────────
+    document.querySelectorAll('.card').forEach(c => c.classList.toggle('liquid-glass', liquidOn));
+
     const bgLayer = document.getElementById('bg-layer');
     const bgDim = document.getElementById('bg-dim');
     if (bgLayer) {
-      // Liquid effect takes priority
-      if (liquidOn) {
-        bgLayer.classList.add('liquid');
-        bgLayer.style.backgroundImage = '';
-        bgLayer.style.filter = '';
-        bgLayer.style.opacity = '';
-      } else {
-        bgLayer.classList.remove('liquid');
-        if (hasBg) {
-          let imageUrl = '';
-          if (!isDemo()) {
-            Log.info('ThemeEngine', '获取背景图', { id: this.config.background });
-            try {
-              const result = await window.jlu.theme.getBackgroundDataUrl(this.config.background);
-              if (result.ok) imageUrl = result.dataUrl;
-            } catch {}
-          }
-          if (!imageUrl) {
-            const base = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-            const bg = ThemeEngine._bgList.find(b => b.id === this.config.background);
-            const file = bg ? bg.file : this.config.background + '.jpg';
-            imageUrl = base + '/backgrounds/' + file;
-          }
-          bgLayer.style.backgroundImage = "url('" + imageUrl + "')";
-          bgLayer.style.backgroundSize = 'cover';
-          bgLayer.style.backgroundPosition = 'center';
-          bgLayer.style.backgroundRepeat = 'no-repeat';
-          bgLayer.style.opacity = this.config.bgOpacity ?? 0.5;
-          bgLayer.style.filter = 'blur(' + (this.config.bgBlur ?? 20) + 'px)';
-        } else {
-          bgLayer.style.backgroundImage = 'none';
-          bgLayer.style.opacity = '0';
+      if (hasBg) {
+        let imageUrl = '';
+        if (!isDemo()) {
+          Log.info('ThemeEngine', '获取背景图', { id: this.config.background });
+          try {
+            const result = await window.jlu.theme.getBackgroundDataUrl(this.config.background);
+            if (result.ok) imageUrl = result.dataUrl;
+          } catch {}
         }
+        if (!imageUrl) {
+          const base = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+          const bg = ThemeEngine._bgList.find(b => b.id === this.config.background);
+          const file = bg ? bg.file : this.config.background + '.jpg';
+          imageUrl = base + '/backgrounds/' + file;
+        }
+        bgLayer.style.backgroundImage = "url('" + imageUrl + "')";
+        bgLayer.style.backgroundSize = 'cover';
+        bgLayer.style.backgroundPosition = 'center';
+        bgLayer.style.backgroundRepeat = 'no-repeat';
+        bgLayer.style.opacity = this.config.bgOpacity ?? 0.5;
+        bgLayer.style.filter = 'blur(' + (this.config.bgBlur ?? 20) + 'px)';
+      } else {
+        bgLayer.style.backgroundImage = 'none';
+        bgLayer.style.opacity = '0';
       }
     }
     if (bgDim && !hasBg) {
@@ -191,13 +185,13 @@ const ThemeEngine = {
         ThemeEngine.update({ cardBlur: parseInt(cb.value) });
       });
     }
-    // Liquid toggle
+    // Liquid glass toggle
     const tl = document.getElementById('theme-liquid');
     if (tl) {
       tl.checked = this.config.liquid === true;
       tl.addEventListener('change', () => {
         ThemeEngine.update({ liquid: tl.checked });
-        Toast.info(tl.checked ? 'Liquid 液态效果已开启（实验性）' : 'Liquid 液态效果已关闭');
+        Toast.info(tl.checked ? 'Liquid Glass 已开启（实验性）' : 'Liquid Glass 已关闭');
       });
     }
     this.updateSettingsUI();
