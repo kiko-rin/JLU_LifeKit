@@ -77,13 +77,12 @@ const ThemeEngine = {
     document.body.classList.toggle('mica-mode', !hasBg);
 
     // ─── Liquid Glass on cards ─────────────────────────────
-    document.querySelectorAll('.card').forEach(c => {
-      c.classList.toggle('liquid-glass', liquidOn);
-      if (liquidOn) {
-        // Inject dynamic SVG filter
-        const filterId = ThemeEngine._injectLiquidFilter(this.config);
-        const isDark = root.getAttribute('data-theme') === 'dark';
-        const ba = this.config.liquidBgAlpha ?? 0.15;
+    if (liquidOn) {
+      const filterId = ThemeEngine._injectLiquidFilter(this.config);
+      const isDark = root.getAttribute('data-theme') === 'dark';
+      const ba = this.config.liquidBgAlpha ?? 0.15;
+      document.querySelectorAll('.card').forEach(c => {
+        c.classList.add('liquid-glass');
         c.style.setProperty('background', isDark ? `rgba(255,255,255,${ba * 0.5})` : `rgba(255,255,255,${ba})`);
         c.style.setProperty('backdrop-filter', `url(#${filterId}) blur(2px) saturate(180%)`);
         c.style.setProperty('-webkit-backdrop-filter', `url(#${filterId}) blur(2px) saturate(180%)`);
@@ -91,14 +90,17 @@ const ThemeEngine = {
         c.style.setProperty('box-shadow', isDark
           ? '0 8px 32px rgba(0,0,0,0.3), inset 0 4px 20px rgba(255,255,255,0.1)'
           : '0 8px 32px rgba(31,38,135,0.2), inset 0 4px 20px rgba(255,255,255,0.3)');
-      } else {
+      });
+    } else {
+      document.querySelectorAll('.card').forEach(c => {
+        c.classList.remove('liquid-glass');
         c.style.removeProperty('background');
         c.style.removeProperty('backdrop-filter');
         c.style.removeProperty('-webkit-backdrop-filter');
         c.style.removeProperty('border');
         c.style.removeProperty('box-shadow');
-      }
-    });
+      });
+    }
 
     const bgLayer = document.getElementById('bg-layer');
     const bgDim = document.getElementById('bg-dim');
@@ -278,8 +280,8 @@ const ThemeEngine = {
     const ss = params.liquidSpecularSaturation ?? 9;
     const pb = params.liquidProgressiveBlur ?? 5;
     const ba = params.liquidBgAlpha ?? 0.15;
-    const filter = document.getElementByIdNS('http://www.w3.org/2000/svg', id);
-    if (filter) filter.remove();
+    const existingFilter = document.getElementById(id);
+    if (existingFilter) existingFilter.remove();
 
     const xmlns = 'http://www.w3.org/2000/svg';
     const f = document.createElementNS(xmlns, 'filter');
