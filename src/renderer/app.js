@@ -66,8 +66,11 @@ const ThemeEngine = {
     const hasBg = this.config.background && this.config.background !== 'none';
 
     // ─── Toggle Windows Mica vs custom bg layer ──────────────
+    // Delay Mica toggle slightly to let content render first (prevents white flash)
     if (!isDemo()) {
-      try { await window.jlu.theme.setMica(!hasBg); } catch {}
+      setTimeout(async () => {
+        try { await window.jlu.theme.setMica(!hasBg); } catch {}
+      }, hasBg ? 0 : 300);
     }
     // Add/remove CSS class for Mica mode
     document.body.classList.toggle('mica-mode', !hasBg);
@@ -1648,18 +1651,18 @@ const pomoPage = {
     if (!isDemo()) await window.jlu.pomo.addTodo({ title, priority });
 
     input.value = '';
-    pomoPage.renderTodos();
+    await pomoPage.loadStatus(); // refresh _todos from backend
     Toast.success('已添加');
   },
 
   async toggleTodo(id) {
     if (!isDemo()) await window.jlu.pomo.toggleTodo(id);
-    pomoPage.renderTodos();
+    await pomoPage.loadStatus();
   },
 
   async deleteTodo(id) {
     if (!isDemo()) await window.jlu.pomo.deleteTodo(id);
-    pomoPage.renderTodos();
+    await pomoPage.loadStatus();
   },
 
   focusTodo(id) {

@@ -41,7 +41,14 @@
     },
     "files": [
       "src/**/*",
+      "assets/**/*",
       "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "assets/",
+        "to": "assets/"
+      }
     ],
     "win": {
       "icon": "assets/icon.png",
